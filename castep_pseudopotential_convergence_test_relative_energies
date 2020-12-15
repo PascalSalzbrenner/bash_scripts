@@ -46,6 +46,8 @@ while read -r line; do
 
 		name=`ls *.param`
 		first_fileroot=`python -c "print '$name'.split('.')[0]"`
+
+		cd $workdir
 	fi
 
 	if [ -z ${second_fileroot+x} ]; then
@@ -53,6 +55,8 @@ while read -r line; do
 
                 name=`ls *.param`
                 second_fileroot=`python -c "print '$name'.split('.')[0]"`
+
+		cd $workdir
         fi
 
 	# compare cutoffs
@@ -104,8 +108,8 @@ while read -r line; do
 
 		cd $workdir
 
-		second_enthalpy=`grep "LBFGS: Final Enthalpy" ${second_structure}/r_cutoff_${r_cut}/geometry_optimisation/${second_fileroot}.castep | awk '{print $5}'`
-		second_natoms=`grep "Total number of ions in cell" ${second_structure}/r_cutoff_${r_cut}/geometry_optimisation/${second_fileroot}.castep | awk 'BEGIN {FS="="}; {print $2}'`
+		second_enthalpy=$(grep "LBFGS: Final Enthalpy" ${second_structure}/r_cutoff_${r_cut}/geometry_optimisation/${second_fileroot}.castep | awk '{print $5}')
+		second_natoms=$(grep "Total number of ions in cell" ${second_structure}/r_cutoff_${r_cut}/geometry_optimisation/${second_fileroot}.castep | awk 'BEGIN {FS="="}; {print $2}')
 	else
 
 		# the second cutoff is smaller than the first - same as above, but for the other structure
@@ -144,8 +148,8 @@ while read -r line; do
 
                 cd $workdir
 
-		first_enthalpy=`grep "LBFGS: Final Enthalpy" ${first_structure}/r_cutoff_${r_cut}/geometry_optimisation/${first_fileroot}.castep | awk '{print $5}'`
-		first_natoms=`grep "Total number of ions in cell" ${first_structure}/r_cutoff_${r_cut}/geometry_optimisation/${first_fileroot}.castep | awk 'BEGIN {FS="="}; {print $2}'`
+		first_enthalpy=$(grep "LBFGS: Final Enthalpy" ${first_structure}/r_cutoff_${r_cut}/geometry_optimisation/${first_fileroot}.castep | awk '{print $5}')
+		first_natoms=$(grep "Total number of ions in cell" ${first_structure}/r_cutoff_${r_cut}/geometry_optimisation/${first_fileroot}.castep | awk 'BEGIN {FS="="}; {print $2}')
 	fi
 	
 	first_enthalpy_per_atom=`python3 -c "print(float('$first_enthalpy')/float('$first_natoms'))"`
