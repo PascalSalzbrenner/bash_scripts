@@ -1,0 +1,149 @@
+#!/bin/bash
+
+# script to compare the relative energies of two different structures of the same elements as a function of pseudopotential radial cutoff
+# runs of castep_pseudopotential_cutoff_radius over the desired radial range must already exist for both structures
+# these must have been done with the same kpoints_mp_spacing
+
+# paths to the two structures
+first_structure=$1
+second_structure=$2
+
+# determine the names of the two structures
+first_structure_name=`python3 -c "print('$first_structure'.rstrip('/').split('/')[-1])"`
+second_structure_name=`python3 -c "print('$second_structure'.rstrip('/').split('/')[-1])"`
+
+ncores=`nproc --all`
+
+# the radius in the pseudopotential string is given in Bohr - conversion factor to Angstrom used for output
+bohr_to_angstrom=0.529177249
+
+# get working directory
+workdir=`pwd`
+
+# reformat the data from cutoff_radius_energy.txt into a more useful shape if this hasn't been done yet
+if [ ! -f common_calculations_${first_structure_name}_${second_structure_name}_cutoff_radius_energy.txt ]; then
+	cp ~/bin/python_scripts/find_cutoff_energies_radius.py .
+	python3 find_cutoff_energies_radius.py $first_structure $second_structure
+fi
+
+# create output file
+if [ ! -f relative_enthalpy_${first_structure_name}_${second_structure_name}.txt ]; then
+	echo "# all enthalpies in eV/atom" > relative_enthalpy_${first_structure_name}_${second_structure_name}.txt
+	echo "# Cutoff radius [Bohr]; Cutoff radius [Ang]; ${first_structure_name}; ${second_structure_name}; relative" >> relative_enthalpy_${first_structure_name}_${second_structure_name}.txt
+fi
+
+# loop over lines 
+while read -r line; do
+	
+	# read out data
+	r_cut=`echo $line | awk '{print $1}'`
+	first_ecut=`echo $line | awk '{print $2}'`
+	second_ecut=`echo $line | awk '{print $3}'`
+	
+	# compare cutoffs
+	if [ $first_ecut -eq $second_ecut ]; then
+
+		# the two geometry optimisations have been done at the same cutoff energy and thus can be compared
+		first_enthalpy=`grep "LBFGS: Final Enthalpy" ${first_structure}/r_cutoff_${r_cut}/geometry_optimisation/H.castep | awk '{print $5}'`
+		second_enthalpy=`grep "LBFGS: Final Enthalpy" ${second_structure}/r_cutoff_${r_cut}/geometry_optimisation/H.castep | awk '{print $5}'`
+		
+		# get number of atoms in order to calculate enthalpy/atom
+		first_natoms=`grep "Total number of ions in cell" ${first_structure}/r_cutoff_${r_cut}/geometry_optimisation/H.castep | awk 'BEGIN {FS="="}; {print $2}'`
+		second_natoms=`grep "Total number of ions in cell" ${second_structure}/r_cutoff_${r_cut}/geometry_optimisation/H.castep | awk 'BEGIN {FS="="}; {print $2}'`
+
+	elif [ $first_ecut -lt $second_ecut ]; then
+		
+		# the first cutoff is smaller than the second - redo the geometry optimisation for the first structure at the higher cutoff
+		cd ${first_structure}/r_cutoff_${r_cut}
+		
+		# if this directory already exists, delete it and rerun
+		if [ -f geometry_optimisation_${second_ecut} ]; then
+                        rm -r geometry_optimisation_${second_ecut}
+                fi
+
+		mkdir geometry_optimisation_${second_ecut}
+		
+		# auto-determine fileroot
+		name=`ls *.param`
+		fileroot=`python -c "print '$name'.split('.')[0]"`
+
+		cp geometry_optimisation/${fileroot}.cell geometry_optimisation_${second_ecut}
+        	sed "s/XYZ/$second_ecut/g" ${fileroot}.param > geometry_optimisation_${second_ecut}/${fileroot}.param
+
+		cd geometry_optimisation_${second_ecut}
+
+		# change task
+        	sed -i "s/singlepoint/geometryoptimisation/i" ${fileroot}.param
+
+        	# add geometry optimisation parameters to param file
+        	echo "" >> ${fileroot}.param
+        	echo "geom_method             LBFGS" >> ${fileroot}.param
+        	echo "geom_max_iter           100" >> ${fileroot}.param
+        	echo "mix_history_length      20" >> ${fileroot}.param
+        	echo "write_cell_structure    True" >> ${fileroot}.param
+        	echo "calculate_stress        True" >> ${fileroot}.param
+        	echo "geom_stress_tol         0.001 GPa" >> ${fileroot}.param
+
+		mpirun -n $ncores castep.mpi $fileroot </dev/null # redirect input in order for this to not mess with the file reading
+
+        	rm ${fileroot}.check ${fileroot}.bands ${fileroot}.castep_bin
+
+		first_enthalpy=`grep "LBFGS: Final Enthalpy" H.castep | awk '{print $5}'`
+		first_natoms=`grep "Total number of ions in cell" H.castep | awk 'BEGIN {FS="="}; {print $2}'`
+
+		cd $workdir
+
+		second_enthalpy=`grep "LBFGS: Final Enthalpy" ${second_structure}/r_cutoff_${r_cut}/geometry_optimisation/H.castep | awk '{print $5}'`
+		second_natoms=`grep "Total number of ions in cell" ${second_structure}/r_cutoff_${r_cut}/geometry_optimisation/H.castep | awk 'BEGIN {FS="="}; {print $2}'`
+	else
+
+		# the second cutoff is smaller than the first - same as above, but for the other structure
+                cd ${second_structure}/r_cutoff_${r_cut}
+
+		# if this directory already exists, delete it and rerun
+		if [ -f geometry_optimisation_${first_ecut} ]; then
+			rm -r geometry_optimisation_${first_ecut}
+		fi
+
+                mkdir geometry_optimisation_${first_ecut}
+                
+                # auto-determine fileroot
+                name=`ls *.param`
+                fileroot=`python -c "print '$name'.split('.')[0]"`
+
+                cp geometry_optimisation/${fileroot}.cell geometry_optimisation_${first_ecut}
+                sed "s/XYZ/$first_ecut/g" ${fileroot}.param > geometry_optimisation_${first_ecut}/${fileroot}.param
+
+                cd geometry_optimisation_${first_ecut}
+
+                # change task
+                sed -i "s/singlepoint/geometryoptimisation/i" ${fileroot}.param
+
+                # add geometry optimisation parameters to param file
+                echo "" >> ${fileroot}.param
+                echo "geom_method             LBFGS" >> ${fileroot}.param
+                echo "geom_max_iter           100" >> ${fileroot}.param
+                echo "mix_history_length      20" >> ${fileroot}.param
+                echo "write_cell_structure    True" >> ${fileroot}.param
+                echo "calculate_stress        True" >> ${fileroot}.param
+                echo "geom_stress_tol         0.001 GPa" >> ${fileroot}.param
+
+                mpirun -n $ncores castep.mpi $fileroot </dev/null # redirect input in order for this to not mess with the file reading
+
+                rm ${fileroot}.check ${fileroot}.bands ${fileroot}.castep_bin
+
+                second_enthalpy=`grep "LBFGS: Final Enthalpy" H.castep | awk '{print $5}'`
+		second_natoms=`grep "Total number of ions in cell" H.castep | awk 'BEGIN {FS="="}; {print $2}'`
+
+                cd $workdir
+
+		first_enthalpy=`grep "LBFGS: Final Enthalpy" ${first_structure}/r_cutoff_${r_cut}/geometry_optimisation/H.castep | awk '{print $5}'`
+		first_natoms=`grep "Total number of ions in cell" ${first_structure}/r_cutoff_${r_cut}/geometry_optimisation/H.castep | awk 'BEGIN {FS="="}; {print $2}'`
+	fi
+	
+	first_enthalpy_per_atom=`python3 -c "print(float('$first_enthalpy')/float('$first_natoms'))"`
+	second_enthalpy_per_atom=`python3 -c "print(float('$second_enthalpy')/float('$second_natoms'))"`
+
+	echo $r_cut `python3 -c "print(float('$r_cut')*float('$bohr_to_angstrom'))"` $first_enthalpy_per_atom $second_enthalpy_per_atom `python3 -c "print(float('$second_enthalpy_per_atom')-float('$first_enthalpy_per_atom'))"` >> relative_enthalpy_${first_structure_name}_${second_structure_name}.txt
+
+done < common_calculations_${first_structure_name}_${second_structure_name}_cutoff_radius_energy.txt

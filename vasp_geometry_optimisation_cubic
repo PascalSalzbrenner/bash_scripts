@@ -1,0 +1,73 @@
+#!/bin/bash
+
+# calculation must be set up to carry out a simple SCF cycle
+
+lattice_param=$1 #the initial lattice parameter
+max=$2 #the final lattice parameter
+step=$3 #by how much the lattice parameter is incremented
+
+ncores=`nproc --all`
+
+while [ `python -c "print int($lattice_param <= $max)"` -eq 1 ]; do
+	
+	if [ ! -d lattice_parameter_$lattice_param ]; then	
+		
+		mkdir lattice_parameter_$lattice_param
+	
+		cp INCAR lattice_parameter_$lattice_param
+		cp POTCAR lattice_parameter_$lattice_param
+		cp KPOINTS lattice_parameter_$lattice_param
+
+		sed "s/lattice_parameter/$lattice_param/g" POSCAR > lattice_parameter_$lattice_param/POSCAR
+
+		cd lattice_parameter_$lattice_param
+		
+		echo "Now running VASP at lattice parameter $lattice_param" # I think since "all output is appended to nohup.out", this should write it into the same file as all the other output
+			
+	       	if [ `awk '{FS = "="} /LSORBIT/ {print $2}' INCAR` == ".TRUE." ]; then
+                        mpirun -np $ncores vasp_ncl
+                else
+                        mpirun -np $ncores vasp_std
+                fi
+		
+		run_successful=`grep "General" OUTCAR` # when VASP completes a job successfully, it prints some "General timing and accounting informations for this job" at the very end of OUTCAR. Thus, if the job terminates prematurely, run_successful will be empty
+
+                while [ `python -c "print int(not '$run_successful')"` -eq 1 ]; do
+                        # not '$run_successful' is true, that is, the run was not successful ($run_successful is empty)
+                        delete_vasp_output
+
+			if [ `grep "LSORBIT" INCAR` = "LSORBIT=.TRUE." ]; then
+				mpirun -np $ncores vasp_ncl
+			else
+				mpirun -np $ncores vasp_std
+			fi
+
+                        run_successful=`grep "General" OUTCAR`
+                done
+                # when this loop is left, we had a successful run
+
+        	# distinguish between Bloechl smearing (-5) and other methods
+	        if [ `awk '{FS = "="} /ISMEAR/ {print $2}' INCAR` == "-5" ]; then
+        	        # Bloechl smearing - some extra lines are printed (Bloechl correction)
+                	energy=`grep "energy" OUTCAR | tail -3 | head -1 | awk '{print $NF}'`
+        	else
+        	        energy=`grep "energy" OUTCAR | tail -1 | awk '{print $NF}'`
+        	fi
+
+		volume_line=`grep "volume" OUTCAR | tail -1`
+		volume=`python -c "print '$volume_line'.split()[-1]"`
+
+		echo $lattice_param $volume $energy >> ../energy.txt
+
+		cd ..
+	
+	fi
+
+	lattice_param=`echo $lattice_param + $step | bc`
+
+done
+
+cp ~/bin/python_scripts/birch_murnaghan_eos_fit.py .
+python3 birch_murnaghan_eos_fit.py
+
+gnuplot energy_volume.gnu

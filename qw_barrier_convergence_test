@@ -1,0 +1,48 @@
+#!/bin/bash
+
+# script to diagonalise the QW along a user-specified k-path for a different number of barrier layers until the energies converge
+# these calculations tend to be very memory-expensive, so the user can specify how many should be run at once
+
+first_barrier_width=$1
+final_barrier_width=$2
+run_at_once=$3
+
+counter=1
+
+for i in `seq $1 $2`; do
+	
+	echo "$i barrier layers"
+
+	mkdir ${i}_barrier_layers
+	cp CamTB.py ${i}_barrier_layers
+	sed "s/num_barrier/${i}/g" input.in > ${i}_barrier_layers/input.in
+	cd ${i}_barrier_layers
+
+	
+	if [ $counter -eq $run_at_once ]; then
+		
+                python3 CamTB.py &
+
+                # halt execution here until all jobs have finished
+
+                a=`jobs -r`
+                b=`echo $a` # to get rid of the newline if there are several running jobs
+
+                while [ `python -c "print int(not '$b')"` -eq 0 ]; do
+                        # there are still running jobs
+                        sleep 60 # pause for 60 seconds and check again
+
+                        a=`jobs -r`
+                        b=`echo $a` # to get rid of the newline if there are several running jobs
+                done
+
+                counter=1 # when this execution finishes, we start the next $run_at_once number of calculations
+        else
+		python3 CamTB.py &
+                counter=$((counter+1))
+        fi
+	
+	cd ..
+done
+
+echo "Done."

@@ -1,0 +1,60 @@
+#!/bin/bash
+
+# run in directory containing input files for a VASP run
+
+first_kpoint=$1
+final_kpoint=$2
+kpoint_step=$3
+
+ncores=`nproc --all`
+
+if [ ! -f energy_kpoints.txt ]; then
+        echo "K-point grid; Total calculated energy [eV]; Time [s]" > energy_kpoints.txt
+fi
+
+for kpoint in `seq $first_kpoint $kpoint_step $final_kpoint`; do
+	
+	mkdir ${kpoint}_kpoints
+
+	cp *CAR ${kpoint}_kpoints
+	sed "s/AA/${kpoint}/g" KPOINTS > ${kpoint}_kpoints/KPOINTS
+
+	cd ${kpoint}_kpoints
+
+	if [ `awk '{FS = "="} /LSORBIT/ {print $2}' INCAR` == ".TRUE." ]; then
+		mpirun -np $ncores vasp_ncl
+	else
+		mpirun -np $ncores vasp_std
+	fi
+
+	run_successful=`grep "General" OUTCAR` # when VASP completes a job successfully, it prints some "General timing and accounting informations for this job" at the very end of OUTCAR. Thus, if the job terminates prematurely, run_successful will be empty
+
+	while [ `python -c "print int(not '$run_successful')"` -eq 1 ]; do
+		# not '$run_successful' is true, that is, the run was not successful ($run_successful is empty)
+		delete_vasp_output
+
+		if [ `awk '{FS = "="} /LSORBIT/ {print $2}' INCAR` == ".TRUE." ]; then
+			mpirun -np $ncores vasp_ncl
+		else
+			mpirun -np $ncores vasp_std
+		fi
+
+		run_successful=`grep "General" OUTCAR`
+	done
+	# when this loop is left, we had a successful run
+
+	# distinguish between Bloechl smearing (-5) and other methods
+	if [ `awk '{FS = "="} /ISMEAR/ {print $2}' INCAR` == "-5" ]; then
+		# Bloechl smearing - some extra lines are printed (Bloechl correction)
+		energy=`grep "energy" OUTCAR | tail -3 | head -1 | awk '{print $NF}'`
+	else
+		energy=`grep "energy" OUTCAR | tail -1 | awk '{print $NF}'`
+	fi
+
+	time=`grep "Elapsed time" OUTCAR | awk 'BEGIN {FS=":"}; {print $2}'`
+
+	cd ..
+
+        echo $kpoint $energy $time >> energy_kpoints.txt 
+
+done

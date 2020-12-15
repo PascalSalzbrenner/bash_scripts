@@ -1,0 +1,26 @@
+#!/bin/bash
+
+rm CHG
+
+if [ `grep "ICHARG" INCAR` != "ICHARG=11" ]
+then
+	rm CHGCAR
+fi
+
+wavecar_del=`grep "ISTART" INCAR`
+
+if [ `python -c "print int('=0' in '$wavecar_del' or '= 0' in '$wavecar_del')"` -eq 1 ]; then
+       rm WAVECAR
+fi
+
+rm CONTCAR
+rm DOSCAR
+rm EIGENVAL
+rm OSZICAR
+rm PCDAT
+rm REPORT
+rm vasprun.xml
+rm XDATCAR
+rm IBZKPT
+rm OUTCAR
+rm PROCAR

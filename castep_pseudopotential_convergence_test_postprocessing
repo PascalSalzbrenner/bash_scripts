@@ -1,0 +1,71 @@
+#!/bin/bash
+
+# script to postprocess a castep_pseudopotential_convergence_test
+# requires at the very least a number of r_cutoff_* directories
+# currently supports postprocessing of bond length (grabs the first bond length in ${fileroot}.castep) & relative energies
+# relative energies need to have been calculated in advance if that task is requested
+# might add others in a modular fashion as and when I need them
+
+# the radius in the pseudopotential string (and hence the directory names) is given in Bohr - conversion factor to Angstrom used for output
+bohr_to_angstrom=0.529177249
+
+# auto-determine fileroot
+name=`ls *.param`
+fileroot=`python3 -c "print('$name'.split('.')[0])"`
+
+echo "Which task would you like to carry out? (currently supported: bond_length, relative_enthalpy)"
+read task
+
+if [ $task == "bond_length" ]; then
+	
+	echo "# cutoff_radius [Ang]; bond length [Ang]" > bond_length.txt
+
+	for d in r_cutoff_*; do
+		radius=`python3 -c "print(float('$d'.split('_')[-1])*float($bohr_to_angstrom))"`
+		
+		length_line=`awk '/Bond/ {print NR}' $d/geometry_optimisation/${fileroot}.castep`
+		length=`awk -v awk_length_line=$length_line 'NR==(awk_length_line+2) {print $7}' $d/geometry_optimisation/${fileroot}.castep`
+
+		echo $radius $length >> bond_length.txt
+	done
+	
+	# define task-dependent variables to be used in plotting output
+	y_label="Bond length [A]"
+	columns="1:2"
+
+elif [ $task == "relative_enthalpy" ]; then
+	# read the two names of the directories containing the two structures which are compared - note that the script must be run in the directory containing the relative_enthalpy_*.txt file
+	echo "What are the names of the two directories containing the calculations to be compared?"
+	read material_1 material_2
+
+	# strip any pontential slashes
+	material_1=`python3 -c "print('$material_1'.rstrip('/'))"`
+	material_2=`python3 -c "print('$material_2'.rstrip('/'))"`
+	
+	# reassign the task variable such that it gives the correct name (root) for the file which contains the relative energies
+	# allow either order of materials
+	if [ -f ${task}_${material_1}_${material_2}.txt ]; then
+		task=${task}_${material_1}_${material_2}
+	else
+		task=${task}_${material_2}_${material_1}
+	fi
+
+	# define task-dependent variables to be used in plotting output
+	y_label="Relative enthalpy [eV]"
+	columns="2:5"
+
+else
+	echo "The task you requested ($task) is not supported. Please request one of the supported tasks (bond_length, relative_energies), or write your own utility."
+	exit 1
+fi
+
+# generate gnuplot file to plot output
+
+echo "set terminal postscript eps colour" >> ${task}.gnu
+echo "set style data points" >> ${task}.gnu
+echo "set output '| epstopdf --filter --outfile=${task}.pdf'" >> ${task}.gnu
+echo "set xlabel 'Cutoff radius [A]'" >> ${task}.gnu
+echo "set ylabel '${y_label}'" >> ${task}.gnu
+echo "plot '${task}.txt' u ${columns} w points pt 7 ps 1.2 lc rgb '#DC143C' notitle" >> ${task}.gnu 
+
+gnuplot ${task}.gnu

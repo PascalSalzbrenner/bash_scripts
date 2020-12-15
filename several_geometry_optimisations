@@ -1,0 +1,13 @@
+#!/bin/bash
+
+lattice_param=$1 #the initial lattice parameter
+max=$2 #the final lattice parameter
+step=$3 #by how much the lattice parameter is incremented
+
+for i in */; do
+
+	cd $i
+	geometry_optimisation_cubic $lattice_param $max $step
+	cd ..
+
+done

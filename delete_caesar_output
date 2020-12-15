@@ -1,0 +1,3 @@
+#!/bin/bash
+
+rm -r Errfiles.tar.gz Machine_files.tar.gz Outfiles.tar.gz Supercell_* equilibrium.dat ibz.dat kpoint_to_supercell.dat lattice.dat lte no* *gvectors* symmetry.dat

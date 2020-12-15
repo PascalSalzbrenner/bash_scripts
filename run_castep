@@ -1,0 +1,9 @@
+#!/bin/bash
+
+ncores=`nproc --all`
+
+# auto-determine fileroot
+name=`ls *.param`
+fileroot=`python -c "print '$name'.split('.')[0]"`
+
+nohup mpirun -n $ncores castep.mpi $fileroot &

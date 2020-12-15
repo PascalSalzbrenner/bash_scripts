@@ -1,0 +1,147 @@
+#!/bin/bash
+
+# script to determine the cutoff radius necessary for an OTF pseudopotential in CASTEP at a user-defined pressure
+# as a general rule: the higher the pressure, the closer together the atoms will be, requiring shorter cutoffs
+# this is because enough of the electrons must be treated exactly to describe bonding well
+
+# however, the shorter the cutoff radius, the more of the rapidly fluctuating core wavefunction must be described exactly, requiring higher cutoff energies
+# therefore, this script contains an outer convergence test, generating the pseudopotential according to a sequence of user-defined cutoff radii, and for each pseudopotential, the total energy is converged over
+# the energy convergence test uses reasonable hard-coded parameters - but can be changed to user-defined if so desired
+# ultimately, the structure obtained as output from a geometry optimisation is converged over
+# the parameters of interest can vary from structure to structure (lattice parameter(s), bond length(s), etc), so require manual inspection
+
+# cutoff radii [Ang]
+r_max=$1
+r_min=$2
+r_step=$3
+
+# other input parameters
+pressure=$4 # [GPa]
+
+ncores=`nproc --all`
+
+# the radius in the pseudopotential string is given in Bohr - conversion factor to Angstrom used for output
+bohr_to_angstrom=0.529177249
+
+# auto-determine fileroot
+name=`ls *.param`
+fileroot=`python -c "print '$name'.split('.')[0]"`
+
+while [ `python -c "print int($r_max >= $r_min)"` -eq 1 ]; do
+
+	# write file containing cutoff radius and cutoff energy
+	if [ ! -f cutoff_radius_energy.txt ]; then
+		echo "Cutoff radius [Bohr]; Cutoff radius [Ang]; Cutoff energy [eV]" > cutoff_radius_energy.txt
+	fi
+	
+	# convert r_max to Python format for consistency
+	r_max=`python3 -c "print(float('$r_max'))"`
+
+	mkdir r_cutoff_${r_max}
+
+	cp ${fileroot}.param r_cutoff_${r_max}
+	sed "s/r_cutoff/${r_max}/g" ${fileroot}.cell > r_cutoff_${r_max}/${fileroot}.cell
+
+	cd r_cutoff_${r_max}
+
+	# internal cut off energy convergence test with reasonable starting parameters
+	# could be adapted or read from command line input
+	cutoff=450
+	energy_step=25
+	convergence_threshold=0.001
+	
+	echo "Cutoff Energy [eV]; Total calculated energy [eV]; Time [s]" >> cut_off_energy.txt
+
+	# we require the energy difference to be < convergence_threshold for two consecutive iterations - loop continues until this is met
+
+	# initialise counter
+	num_threshold_passed=0
+
+	while [ 1 -lt 2 ]; do
+		# always True, infinite loop
+
+		# update variables
+                previous_energy=$energy
+
+		mkdir cut_off_energy_${cutoff}
+		cp ${fileroot}.cell cut_off_energy_${cutoff}
+		sed "s/XYZ/${cutoff}/g" ${fileroot}.param > cut_off_energy_${cutoff}/${fileroot}.param
+
+		cd cut_off_energy_${cutoff}
+
+		mpirun -n $ncores castep.mpi $fileroot
+
+		is_soc=`awk '/spin-orbit coupling/ {print $4}' ${fileroot}.castep`
+
+		if [ $is_soc == "off" ]; then
+			# calculation is not spin-orbit coupled
+			energy=`awk '/Final energy/ {print $5}' ${fileroot}.castep`
+		else
+			energy=`awk '/Final energy/ {print $4}' ${fileroot}.castep`
+		fi
+
+		time=`awk '/Total time/ {print $4}' ${fileroot}.castep`
+		echo $cutoff $energy $time >> ../cut_off_energy.txt
+
+		rm ${fileroot}.check ${fileroot}.bands ${fileroot}.castep_bin
+		
+		cd ..
+
+		if [ `python -c "print int(abs($energy-$previous_energy) > $convergence_threshold)"` -eq 1 ]; then
+			
+			# the condition is not fulfilled at this step - (re)set the counter to 0
+			num_threshold_passed=0
+		
+		else
+			if [ $num_threshold_passed -eq 1 ]; then
+				# the previous step passed, so this is the second time
+				break
+			else
+				num_threshold_passed=$(($num_threshold_passed+1))
+			fi
+		fi
+
+                cutoff=$(($cutoff+$energy_step))
+	
+	done
+
+	# geometry optimisation with converged cutoff energy
+	# using as converged cutoff the last one calculated for a little extra leeway, although in principle the one two steps before is acceptable as well
+	
+	echo $r_max `python3 -c "print(float('$r_max')*float('$bohr_to_angstrom'))"` $cutoff >> ../cutoff_radius_energy.txt
+
+	mkdir geometry_optimisation
+	cp ${fileroot}.cell geometry_optimisation
+	sed "s/XYZ/$cutoff/g" ${fileroot}.param > geometry_optimisation/${fileroot}.param
+	
+	cd geometry_optimisation
+	
+	# change task
+	sed -i "s/singlepoint/geometryoptimisation/i" ${fileroot}.param
+
+	# add geometry optimisation parameters to param file
+	echo "" >> ${fileroot}.param
+	echo "geom_method             LBFGS" >> ${fileroot}.param
+	echo "geom_max_iter           100" >> ${fileroot}.param
+	echo "mix_history_length      20" >> ${fileroot}.param
+	echo "write_cell_structure    True" >> ${fileroot}.param
+	echo "calculate_stress        True" >> ${fileroot}.param
+	echo "geom_stress_tol         0.001 GPa" >> ${fileroot}.param
+
+	# add pressure to cell file
+	echo "" >> ${fileroot}.cell
+	echo "%BLOCK external_pressure" >> ${fileroot}.cell
+	echo "${pressure} 0 0" >> ${fileroot}.cell
+	echo "${pressure} 0" >> ${fileroot}.cell
+	echo "${pressure}" >> ${fileroot}.cell
+	echo "%ENDBLOCK external_pressure" >> ${fileroot}.cell
+
+	mpirun -n $ncores castep.mpi $fileroot
+	
+	rm ${fileroot}.check ${fileroot}.bands ${fileroot}.castep_bin
+
+	cd  ../..
+
+	r_max=`echo $r_max - $r_step | bc`
+
+done # r_max > r_min

@@ -1,0 +1,31 @@
+#!/bin/bash
+
+T_min=$1 # the minimum temperature
+T_max=$2 # the maximum temperature
+T_step=$3 # by how much the temperature is incremented
+
+echo "What is the static band gap (in eV) for this system?"
+read static_band_gap
+
+echo "#T [K]; Band Gap [eV]; Change compared to static [meV]" > band_gap_temperature.dat
+
+for i in `seq $T_min $T_step $T_max`; do
+	
+	cd T_${i}K
+
+	cp ~/bin/python_scripts/band_gap.py .
+	python3 band_gap.py
+
+	band_gap=`awk '/Band Gap/ {print $4}' band_gap.dat`
+	band_gap_change=`python -c "print(1000*float('$band_gap')-1000*float('$static_band_gap'))"`
+
+	echo $i $band_gap $band_gap_change >> ../band_gap_temperature.dat
+	
+	cd ..
+done
+
+cp ~/bin/python_scripts/thermal_expansion_band_gap.py .
+python3 thermal_expansion_band_gap.py
+
+gnuplot band_gap_temperature.gnu
+gnuplot band_gap_change_temperature.gnu

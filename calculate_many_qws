@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# script to cd into a sequence of user-specified QWs and diagonalise the calculation whose input is already there
+# these calculations tend to be very memory-expensive, so the user can specify how many should be run at once
+
+first_width=$1
+final_width=$2
+run_at_once=$3
+
+counter=1
+
+for i in `seq $1 $2`; do
+	
+	echo "$i layers"
+
+	cd ${i}_well_layers
+	
+	if [ $counter -eq $run_at_once ]; then
+		
+		cp ~/bin/CamTB/source/CamTB.py .
+                python3 CamTB.py &
+
+                # halt execution here until all jobs have finished
+
+                a=`jobs -r`
+                b=`echo $a` # to get rid of the newline if there are several running jobs
+
+                while [ `python -c "print int(not '$b')"` -eq 0 ]; do
+                        # there are still running jobs
+                        sleep 60 # pause for 60 seconds and check again
+
+                        a=`jobs -r`
+                        b=`echo $a` # to get rid of the newline if there are several running jobs
+                done
+
+                counter=1 # when this execution finishes, we start the next $run_at_once number of calculations
+        else
+		cp ~/bin/CamTB/source/CamTB.py .
+		python3 CamTB.py &
+                counter=$((counter+1))
+        fi
+	
+	cd ..
+done
+
+echo "Done."

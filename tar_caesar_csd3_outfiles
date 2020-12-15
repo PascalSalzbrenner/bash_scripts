@@ -1,0 +1,6 @@
+#!/bin/bash
+
+tar -zcf Machine_files.tar.gz machine.file.*
+tar -zcf Outfiles.tar.gz *.out
+tar -zcf Errfiles.tar.gz  *.err
+rm -r machine.file.* *.out *.err

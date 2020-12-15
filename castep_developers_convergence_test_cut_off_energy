@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# run in directory containing input files for a CASTEP run
+
+first_energy=$1
+final_energy=$2
+energy_step=$3
+fileroot=$4
+
+ncores=`nproc --all`
+
+if [ ! -f cut_off_energy.txt ]; then
+	echo "Cutoff Energy [eV]; Total calculated energy [eV]; Time [s]" >> cut_off_energy.txt
+fi
+
+for cutoff in `seq $first_energy $energy_step $final_energy`; do
+	
+	mkdir cut_off_energy_${cutoff}	
+	cp ${fileroot}.* cut_off_energy_${cutoff}
+	cp *.usp* cut_off_energy_${cutoff}
+	cp *pot* cut_off_energy_${cutoff}
+	
+	cd cut_off_energy_${cutoff}
+	
+	sed -i "s/XYZ/${cutoff}/g" ${fileroot}.param
+
+	mpirun -n $ncores castep_developers.mpi $fileroot
+
+	energy=`awk '/Final energy/ {print $4}' ${fileroot}.castep`
+	time=`awk '/Total time/ {print $4}' ${fileroot}.castep`
+        echo $cutoff $energy $time >> ../cut_off_energy.txt
+	
+	rm ${fileroot}.check ${fileroot}.bands ${fileroot}.castep_bin
+
+	cd ..
+done
