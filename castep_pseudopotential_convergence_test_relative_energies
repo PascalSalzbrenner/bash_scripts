@@ -39,17 +39,32 @@ while read -r line; do
 	r_cut=`echo $line | awk '{print $1}'`
 	first_ecut=`echo $line | awk '{print $2}'`
 	second_ecut=`echo $line | awk '{print $3}'`
-	
+
+	# determine fileroots if they haven't been set yet
+	if [ -z ${first_fileroot+x} ]; then
+		cd ${first_structure}/r_cutoff_${r_cut}/geometry_optimisation
+
+		name=`ls *.param`
+		first_fileroot=`python -c "print '$name'.split('.')[0]"`
+	fi
+
+	if [ -z ${second_fileroot+x} ]; then
+                cd ${second_structure}/r_cutoff_${r_cut}/geometry_optimisation
+
+                name=`ls *.param`
+                second_fileroot=`python -c "print '$name'.split('.')[0]"`
+        fi
+
 	# compare cutoffs
 	if [ $first_ecut -eq $second_ecut ]; then
 
 		# the two geometry optimisations have been done at the same cutoff energy and thus can be compared
-		first_enthalpy=`grep "LBFGS: Final Enthalpy" ${first_structure}/r_cutoff_${r_cut}/geometry_optimisation/H.castep | awk '{print $5}'`
-		second_enthalpy=`grep "LBFGS: Final Enthalpy" ${second_structure}/r_cutoff_${r_cut}/geometry_optimisation/H.castep | awk '{print $5}'`
+		first_enthalpy=`grep "LBFGS: Final Enthalpy" ${first_structure}/r_cutoff_${r_cut}/geometry_optimisation/${first_fileroot}.castep | awk '{print $5}'`
+		second_enthalpy=`grep "LBFGS: Final Enthalpy" ${second_structure}/r_cutoff_${r_cut}/geometry_optimisation/${second_fileroot}.castep | awk '{print $5}'`
 		
 		# get number of atoms in order to calculate enthalpy/atom
-		first_natoms=`grep "Total number of ions in cell" ${first_structure}/r_cutoff_${r_cut}/geometry_optimisation/H.castep | awk 'BEGIN {FS="="}; {print $2}'`
-		second_natoms=`grep "Total number of ions in cell" ${second_structure}/r_cutoff_${r_cut}/geometry_optimisation/H.castep | awk 'BEGIN {FS="="}; {print $2}'`
+		first_natoms=`grep "Total number of ions in cell" ${first_structure}/r_cutoff_${r_cut}/geometry_optimisation/${first_fileroot}.castep | awk 'BEGIN {FS="="}; {print $2}'`
+		second_natoms=`grep "Total number of ions in cell" ${second_structure}/r_cutoff_${r_cut}/geometry_optimisation/${second_fileroot}.castep | awk 'BEGIN {FS="="}; {print $2}'`
 
 	elif [ $first_ecut -lt $second_ecut ]; then
 		
@@ -63,38 +78,34 @@ while read -r line; do
 
 		mkdir geometry_optimisation_${second_ecut}
 		
-		# auto-determine fileroot
-		name=`ls *.param`
-		fileroot=`python -c "print '$name'.split('.')[0]"`
-
-		cp geometry_optimisation/${fileroot}.cell geometry_optimisation_${second_ecut}
-        	sed "s/XYZ/$second_ecut/g" ${fileroot}.param > geometry_optimisation_${second_ecut}/${fileroot}.param
+		cp geometry_optimisation/${first_fileroot}.cell geometry_optimisation_${second_ecut}
+        	sed "s/XYZ/$second_ecut/g" ${first_fileroot}.param > geometry_optimisation_${second_ecut}/${first_fileroot}.param
 
 		cd geometry_optimisation_${second_ecut}
 
 		# change task
-        	sed -i "s/singlepoint/geometryoptimisation/i" ${fileroot}.param
+        	sed -i "s/singlepoint/geometryoptimisation/i" ${first_fileroot}.param
 
         	# add geometry optimisation parameters to param file
-        	echo "" >> ${fileroot}.param
-        	echo "geom_method             LBFGS" >> ${fileroot}.param
-        	echo "geom_max_iter           100" >> ${fileroot}.param
-        	echo "mix_history_length      20" >> ${fileroot}.param
-        	echo "write_cell_structure    True" >> ${fileroot}.param
-        	echo "calculate_stress        True" >> ${fileroot}.param
-        	echo "geom_stress_tol         0.001 GPa" >> ${fileroot}.param
+        	echo "" >> ${first_fileroot}.param
+        	echo "geom_method             LBFGS" >> ${first_fileroot}.param
+        	echo "geom_max_iter           100" >> ${first_fileroot}.param
+        	echo "mix_history_length      20" >> ${first_fileroot}.param
+        	echo "write_cell_structure    True" >> ${first_fileroot}.param
+        	echo "calculate_stress        True" >> ${first_fileroot}.param
+        	echo "geom_stress_tol         0.001 GPa" >> ${first_fileroot}.param
 
-		mpirun -n $ncores castep.mpi $fileroot </dev/null # redirect input in order for this to not mess with the file reading
+		mpirun -n $ncores castep.mpi $first_fileroot </dev/null # redirect input in order for this to not mess with the file reading
 
-        	rm ${fileroot}.check ${fileroot}.bands ${fileroot}.castep_bin
+        	rm ${first_fileroot}.check ${first_fileroot}.bands ${first_fileroot}.castep_bin
 
-		first_enthalpy=`grep "LBFGS: Final Enthalpy" H.castep | awk '{print $5}'`
-		first_natoms=`grep "Total number of ions in cell" H.castep | awk 'BEGIN {FS="="}; {print $2}'`
+		first_enthalpy=`grep "LBFGS: Final Enthalpy" ${first_fileroot}.castep | awk '{print $5}'`
+		first_natoms=`grep "Total number of ions in cell" ${first_fileroot}.castep | awk 'BEGIN {FS="="}; {print $2}'`
 
 		cd $workdir
 
-		second_enthalpy=`grep "LBFGS: Final Enthalpy" ${second_structure}/r_cutoff_${r_cut}/geometry_optimisation/H.castep | awk '{print $5}'`
-		second_natoms=`grep "Total number of ions in cell" ${second_structure}/r_cutoff_${r_cut}/geometry_optimisation/H.castep | awk 'BEGIN {FS="="}; {print $2}'`
+		second_enthalpy=`grep "LBFGS: Final Enthalpy" ${second_structure}/r_cutoff_${r_cut}/geometry_optimisation/${second_fileroot}.castep | awk '{print $5}'`
+		second_natoms=`grep "Total number of ions in cell" ${second_structure}/r_cutoff_${r_cut}/geometry_optimisation/${second_fileroot}.castep | awk 'BEGIN {FS="="}; {print $2}'`
 	else
 
 		# the second cutoff is smaller than the first - same as above, but for the other structure
@@ -106,39 +117,35 @@ while read -r line; do
 		fi
 
                 mkdir geometry_optimisation_${first_ecut}
-                
-                # auto-determine fileroot
-                name=`ls *.param`
-                fileroot=`python -c "print '$name'.split('.')[0]"`
 
-                cp geometry_optimisation/${fileroot}.cell geometry_optimisation_${first_ecut}
-                sed "s/XYZ/$first_ecut/g" ${fileroot}.param > geometry_optimisation_${first_ecut}/${fileroot}.param
+                cp geometry_optimisation/${second_fileroot}.cell geometry_optimisation_${first_ecut}
+                sed "s/XYZ/$first_ecut/g" ${second_fileroot}.param > geometry_optimisation_${first_ecut}/${second_fileroot}.param
 
                 cd geometry_optimisation_${first_ecut}
 
                 # change task
-                sed -i "s/singlepoint/geometryoptimisation/i" ${fileroot}.param
+                sed -i "s/singlepoint/geometryoptimisation/i" ${second_fileroot}.param
 
                 # add geometry optimisation parameters to param file
-                echo "" >> ${fileroot}.param
-                echo "geom_method             LBFGS" >> ${fileroot}.param
-                echo "geom_max_iter           100" >> ${fileroot}.param
-                echo "mix_history_length      20" >> ${fileroot}.param
-                echo "write_cell_structure    True" >> ${fileroot}.param
-                echo "calculate_stress        True" >> ${fileroot}.param
-                echo "geom_stress_tol         0.001 GPa" >> ${fileroot}.param
+                echo "" >> ${second_fileroot}.param
+                echo "geom_method             LBFGS" >> ${second_fileroot}.param
+                echo "geom_max_iter           100" >> ${second_fileroot}.param
+                echo "mix_history_length      20" >> ${second_fileroot}.param
+                echo "write_cell_structure    True" >> ${second_fileroot}.param
+                echo "calculate_stress        True" >> ${second_fileroot}.param
+                echo "geom_stress_tol         0.001 GPa" >> ${second_fileroot}.param
 
-                mpirun -n $ncores castep.mpi $fileroot </dev/null # redirect input in order for this to not mess with the file reading
+                mpirun -n $ncores castep.mpi $second_fileroot </dev/null # redirect input in order for this to not mess with the file reading
 
-                rm ${fileroot}.check ${fileroot}.bands ${fileroot}.castep_bin
+                rm ${second_fileroot}.check ${second_fileroot}.bands ${second_fileroot}.castep_bin
 
-                second_enthalpy=`grep "LBFGS: Final Enthalpy" H.castep | awk '{print $5}'`
-		second_natoms=`grep "Total number of ions in cell" H.castep | awk 'BEGIN {FS="="}; {print $2}'`
+                second_enthalpy=`grep "LBFGS: Final Enthalpy" ${second_fileroot}.castep | awk '{print $5}'`
+		second_natoms=`grep "Total number of ions in cell" ${second_fileroot}.castep | awk 'BEGIN {FS="="}; {print $2}'`
 
                 cd $workdir
 
-		first_enthalpy=`grep "LBFGS: Final Enthalpy" ${first_structure}/r_cutoff_${r_cut}/geometry_optimisation/H.castep | awk '{print $5}'`
-		first_natoms=`grep "Total number of ions in cell" ${first_structure}/r_cutoff_${r_cut}/geometry_optimisation/H.castep | awk 'BEGIN {FS="="}; {print $2}'`
+		first_enthalpy=`grep "LBFGS: Final Enthalpy" ${first_structure}/r_cutoff_${r_cut}/geometry_optimisation/${first_fileroot}.castep | awk '{print $5}'`
+		first_natoms=`grep "Total number of ions in cell" ${first_structure}/r_cutoff_${r_cut}/geometry_optimisation/${first_fileroot}.castep | awk 'BEGIN {FS="="}; {print $2}'`
 	fi
 	
 	first_enthalpy_per_atom=`python3 -c "print(float('$first_enthalpy')/float('$first_natoms'))"`
