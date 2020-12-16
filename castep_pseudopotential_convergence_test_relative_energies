@@ -32,6 +32,17 @@ if [ ! -f relative_enthalpy_${first_structure_name}_${second_structure_name}.txt
 	echo "# Cutoff radius [Bohr]; Cutoff radius [Ang]; ${first_structure_name}; ${second_structure_name}; relative" >> relative_enthalpy_${first_structure_name}_${second_structure_name}.txt
 fi
 
+# auto-determine fileroots
+cd ${first_structure}
+name=`ls *.param`
+first_fileroot=`python -c "print '$name'.split('.')[0]"`
+cd $workdir
+
+cd ${second_structure}
+name=`ls *.param`
+second_fileroot=`python -c "print '$name'.split('.')[0]"`
+cd $workdir
+
 # loop over lines 
 while read -r line; do
 	
@@ -39,25 +50,6 @@ while read -r line; do
 	r_cut=`echo $line | awk '{print $1}'`
 	first_ecut=`echo $line | awk '{print $2}'`
 	second_ecut=`echo $line | awk '{print $3}'`
-
-	# determine fileroots if they haven't been set yet
-	if [ -z ${first_fileroot+x} ]; then
-		cd ${first_structure}/r_cutoff_${r_cut}/geometry_optimisation
-
-		name=`ls *.param`
-		first_fileroot=`python -c "print '$name'.split('.')[0]"`
-
-		cd $workdir
-	fi
-
-	if [ -z ${second_fileroot+x} ]; then
-                cd ${second_structure}/r_cutoff_${r_cut}/geometry_optimisation
-
-                name=`ls *.param`
-                second_fileroot=`python -c "print '$name'.split('.')[0]"`
-
-		cd $workdir
-        fi
 
 	# compare cutoffs
 	if [ $first_ecut -eq $second_ecut ]; then
@@ -151,6 +143,10 @@ while read -r line; do
 		first_enthalpy=`grep "LBFGS: Final Enthalpy" ${first_structure}/r_cutoff_${r_cut}/geometry_optimisation/${first_fileroot}.castep | awk '{print $5}'`
 		first_natoms=`grep "Total number of ions in cell" ${first_structure}/r_cutoff_${r_cut}/geometry_optimisation/${first_fileroot}.castep | awk 'BEGIN {FS="="}; {print $2}'`
 	fi
+
+	echo $r_cut
+	echo $first_enthalpy
+	echo $second_enthalpy
 
 	first_enthalpy_per_atom=`python3 -c "print(float('$first_enthalpy')/float('$first_natoms'))"`
 	second_enthalpy_per_atom=`python3 -c "print(float('$second_enthalpy')/float('$second_natoms'))"`
