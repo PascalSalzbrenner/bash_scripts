@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# script to set the path to a library sumo needs but won't by default find
+
+export LD_PRELOAD=/rscratch/Compilers/intel/19.1.0/lib/intel64/libirc.so
