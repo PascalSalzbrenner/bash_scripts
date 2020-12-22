@@ -17,6 +17,12 @@ r_step=$3
 
 # other input parameters
 pressure=$4 # [GPa]
+r_cut_qc=$5 # for good pseudopotentials, it is necessary to have r_cut*qc = constant (approximately)
+
+# r_cut_qc can be user-supplied, but if it isn't, a default of 5 is used, which should generally be reasonable
+if [ -z $r_cut_qc ]; then
+	r_cut_qc=5
+fi
 
 ncores=`nproc --all`
 
@@ -28,7 +34,7 @@ name=`ls *.param`
 fileroot=`python -c "print '$name'.split('.')[0]"`
 
 while [ `python -c "print int($r_max >= $r_min)"` -eq 1 ]; do
-
+	
 	# write file containing cutoff radius and cutoff energy
 	if [ ! -f cutoff_radius_energy.txt ]; then
 		echo "Cutoff radius [Bohr]; Cutoff radius [Ang]; Cutoff energy [eV]" > cutoff_radius_energy.txt
@@ -36,6 +42,9 @@ while [ `python -c "print int($r_max >= $r_min)"` -eq 1 ]; do
 	
 	# convert r_max to Python format for consistency
 	r_max=`python3 -c "print(float('$r_max'))"`
+	
+	# calculate the appropriate qc (round up)
+	qc=`python3 -c "import math; print(math.ceil(float('$r_cut_qc')/float('$r_max')))"`
 
 	mkdir r_cutoff_${r_max}
 
@@ -43,6 +52,8 @@ while [ `python -c "print int($r_max >= $r_min)"` -eq 1 ]; do
 	sed "s/r_cutoff/${r_max}/g" ${fileroot}.cell > r_cutoff_${r_max}/${fileroot}.cell
 
 	cd r_cutoff_${r_max}
+
+	sed -i "s/q_cutoff/${qc}/g" ${fileroot}.cell
 
 	# internal cut off energy convergence test with reasonable starting parameters
 	# could be adapted or read from command line input
