@@ -21,17 +21,18 @@ if [ $task == "bond_length" ]; then
 	echo "# cutoff_radius [Ang]; bond length [Ang]" > bond_length.txt
 
 	for d in r_cutoff_*; do
-		radius=`python3 -c "print(float('$d'.split('_')[-1])*float($bohr_to_angstrom))"`
+		radius_bohr=`python3 -c "print('$d'.split('_')[-1])"`
+		radius_ang=`python3 -c "print(float('$radius_bohr')*float('$bohr_to_angstrom'))"`
 		
 		length_line=`awk '/Bond/ {print NR}' $d/geometry_optimisation/${fileroot}.castep`
 		length=`awk -v awk_length_line=$length_line 'NR==(awk_length_line+2) {print $7}' $d/geometry_optimisation/${fileroot}.castep`
 
-		echo $radius $length >> bond_length.txt
+		echo $radius_bohr $radius_ang $length >> bond_length.txt
 	done
 	
 	# define task-dependent variables to be used in plotting output
 	y_label="Bond length [A]"
-	columns="1:2"
+	columns="2:3"
 
 elif [ $task == "relative_enthalpy" ]; then
 	# read the two names of the directories containing the two structures which are compared - note that the script must be run in the directory containing the relative_enthalpy_*.txt file
