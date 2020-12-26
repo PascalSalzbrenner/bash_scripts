@@ -18,7 +18,7 @@ read task
 
 if [ $task == "bond_length" ]; then
 	
-	echo "# cutoff_radius [Ang]; bond length [Ang]" > bond_length.txt
+	echo "# cutoff_radius [Bohr]; cutoff_radius [Ang]; bond length [Ang]" > bond_length.txt
 
 	for d in r_cutoff_*; do
 		radius_bohr=`python3 -c "print('$d'.split('_')[-1])"`
