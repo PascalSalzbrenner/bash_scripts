@@ -1,0 +1,45 @@
+#!/bin/bash
+
+# run in directory containing input files for a CASTEP run
+
+first_kpoint=$1
+final_kpoint=$2
+kpoint_step=$3
+
+ncores=`nproc --all`
+
+ry_to_ev=13.605698066
+
+if [ ! -f k_points.txt ]; then
+        echo "K-point grid; Total calculated energy per atom [eV]; Time [s]" >> k_points.txt
+fi
+
+for kpoint in `seq $first_kpoint $kpoint_step $final_kpoint`; do
+	
+	mkdir ${kpoint}_k_points	
+	cp pw.in ${kpoint}_k_points
+	cp *upf ${kpoint}_k_points
+	cp *UPF ${kpoint}_k_points
+	
+	cd ${kpoint}_k_points 
+	
+	sed -i "s/AA/${kpoint}/gi" pw.in
+
+	mpirun -np $ncores pw.x -i pw.in > pw.out
+
+	energy=`awk '/total energy/ {print $5}' pw.out | tail -2 | head -1`
+
+        time=`awk '/WALL/ {print $5}' pw.out | tail -1`
+
+        # determine number of atoms per UC in order to calculate the total energy per atom
+
+        natoms_raw=`awk '{IGNORECASE=1}; {FS="="}; /nat/ {print $2}' pw.in`
+        natoms=`echo ${natoms_raw%,*}`
+        energy_per_atom=`python -c "print(float('$energy')*float('$ry_to_ev')/float('$natoms'))"`
+
+        echo "$kpoint x $kpoint x $kpoint" $energy_per_atom $time >> ../k_points.txt
+
+	rm -r *.save
+
+	cd ..
+done
