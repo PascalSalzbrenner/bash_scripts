@@ -17,13 +17,12 @@ fi
 for kpoint in `seq $first_kpoint $kpoint_step $final_kpoint`; do
 	
 	mkdir ${kpoint}_k_points	
-	cp pw.in ${kpoint}_k_points
 	cp *upf ${kpoint}_k_points
 	cp *UPF ${kpoint}_k_points
 	
-	cd ${kpoint}_k_points 
+	sed "s/AA/${kpoint}/gi" pw.in > ${kpoint}_k_points/pw.in
 	
-	sed -i "s/AA/${kpoint}/gi" pw.in
+	cd ${kpoint}_k_points 
 
 	mpirun -np $ncores /u/fs1/pts28/bin/qe-6.4.1/bin/pw.x -i pw.in > pw.out
 

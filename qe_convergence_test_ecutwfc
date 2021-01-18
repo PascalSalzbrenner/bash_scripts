@@ -17,13 +17,12 @@ fi
 for cutoff in `seq $first_energy $energy_step $final_energy`; do
 	
 	mkdir ecutwfc_${cutoff}	
-	cp pw.in ecutwfc_${cutoff} 
 	cp *upf ecutwfc_${cutoff}
 	cp *UPF ecutwfc_${cutoff}
 	
-	cd ecutwfc_${cutoff}
+	sed "s/XYZ/${cutoff}/gi" pw.in > ecutwfc_${cutoff}/pw.in
 	
-	sed -i "s/XYZ/${cutoff}/gi" pw.in
+	cd ecutwfc_${cutoff}
 
 	mpirun -np $ncores pw.x -i pw.in > pw.out
 	
