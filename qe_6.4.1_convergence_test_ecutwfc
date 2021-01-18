@@ -1,0 +1,45 @@
+#!/bin/bash
+
+# run in directory containing input file pw.in for a QE run
+
+first_energy=$1
+final_energy=$2
+energy_step=$3
+
+ncores=`nproc --all`
+
+ry_to_ev=13.605698066
+
+if [ ! -f ecutwfc.txt ]; then
+	echo "Cutoff Energy [Ry]; Total calculated energy per atom [eV]; Time" >> ecutwfc.txt
+fi
+
+for cutoff in `seq $first_energy $energy_step $final_energy`; do
+	
+	mkdir ecutwfc_${cutoff}	
+	cp pw.in ecutwfc_${cutoff} 
+	cp *upf ecutwfc_${cutoff}
+	cp *UPF ecutwfc_${cutoff}
+	
+	cd ecutwfc_${cutoff}
+	
+	sed -i "s/XYZ/${cutoff}/gi" pw.in
+
+	mpirun -np $ncores /u/fs1/pts28/bin/qe-6.4.1/bin/pw.x -i pw.in > pw.out
+	
+	energy=`awk '/total energy/ {print $5}' pw.out | tail -2 | head -1`
+
+	time=`awk '/WALL/ {print $6}' pw.out | tail -1`
+
+	# determine number of atoms per UC in order to calculate the total energy per atom
+
+	natoms_raw=`awk '{IGNORECASE=1}; {FS="="}; /nat/ {print $2}' pw.in`
+	natoms=`echo ${natoms_raw%,*}`
+	energy_per_atom=`python -c "print(float('$energy')*float('$ry_to_ev')/float('$natoms'))"`
+
+	echo $cutoff $energy_per_atom $time >> ../ecutwfc.txt
+	
+	rm -r *.save
+
+	cd ..
+done
