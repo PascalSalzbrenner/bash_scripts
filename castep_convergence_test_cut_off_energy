@@ -25,7 +25,7 @@ for cutoff in `seq $first_energy $energy_step $final_energy`; do
 	
 	cd cut_off_energy_${cutoff}
 	
-	sed -i "s/XYZ/${cutoff}/g" ${fileroot}.param
+	sed -i "s/XYZ/${cutoff}/gi" ${fileroot}.param
 
 	mpirun -n $ncores castep.mpi $fileroot
 	

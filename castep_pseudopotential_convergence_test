@@ -76,7 +76,7 @@ while [ `python -c "print int($r_max >= $r_min)"` -eq 1 ]; do
 
 		mkdir cut_off_energy_${cutoff}
 		cp ${fileroot}.cell cut_off_energy_${cutoff}
-		sed "s/XYZ/${cutoff}/g" ${fileroot}.param > cut_off_energy_${cutoff}/${fileroot}.param
+		sed "s/XYZ/${cutoff}/gi" ${fileroot}.param > cut_off_energy_${cutoff}/${fileroot}.param
 
 		cd cut_off_energy_${cutoff}
 
@@ -123,7 +123,7 @@ while [ `python -c "print int($r_max >= $r_min)"` -eq 1 ]; do
 
 	mkdir geometry_optimisation
 	cp ${fileroot}.cell geometry_optimisation
-	sed "s/XYZ/$cutoff/g" ${fileroot}.param > geometry_optimisation/${fileroot}.param
+	sed "s/XYZ/$cutoff/gi" ${fileroot}.param > geometry_optimisation/${fileroot}.param
 	
 	cd geometry_optimisation
 	

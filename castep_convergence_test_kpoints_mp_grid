@@ -25,7 +25,7 @@ for kpoint in `seq $first_kpoint $kpoint_step $final_kpoint`; do
 	
 	cd ${kpoint}_kpoints 
 	
-	sed -i "s/AAA/${kpoint}/g" ${fileroot}.cell
+	sed -i "s/AAA/${kpoint}/gi" ${fileroot}.cell
 
 	mpirun -n $ncores castep.mpi $fileroot
 
