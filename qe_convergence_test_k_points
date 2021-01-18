@@ -20,7 +20,7 @@ for kpoint in `seq $first_kpoint $kpoint_step $final_kpoint`; do
 	cp *upf ${kpoint}_k_points
 	cp *UPF ${kpoint}_k_points
 	
-	sed "s/AA/${kpoint}/gi" pw.in > ${kpoint}_k_points/pw.in
+	sed "s/AAA/${kpoint}/gi" pw.in > ${kpoint}_k_points/pw.in
 	
 	cd ${kpoint}_k_points 
 
