@@ -13,7 +13,7 @@ fileroot=`python -c "print '$name'.split('.')[0]"
 ncores=`nproc --all`
 
 if [ ! -f kpoint_mp_grid.txt ]; then
-        echo "K-point grid; Total calculated energy [eV]; Time [s]" >> kpoint_mp_grid.txt
+        echo "K-point grid; Total calculated energy per atom [eV]; Time [s]" >> kpoint_mp_grid.txt
 fi
 
 for kpoint in `seq $first_kpoint $kpoint_step $final_kpoint`; do
@@ -40,7 +40,11 @@ for kpoint in `seq $first_kpoint $kpoint_step $final_kpoint`; do
         fi
 	
 	time=`awk '/Total time/ {print $4}' ${fileroot}.castep`
-        echo "$kpoint x $kpoint x $kpoint" $energy $time >> ../kpoint_mp_grid.txt
+
+	natoms=`grep "Total number of ions in cell" ${fileroot}.castep | awk 'BEGIN {FS="="}; {print $2}'`
+        energy_per_atom=`python -c "print(float('$energy')/float('$natoms'))"`
+
+        echo "$kpoint x $kpoint x $kpoint" $energy_per_atom $time >> ../kpoint_mp_grid.txt
 
 	rm ${fileroot}.check ${fileroot}.bands ${fileroot}.castep_bin
 

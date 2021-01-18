@@ -13,7 +13,7 @@ fileroot=`python -c "print '$name'.split('.')[0]"`
 ncores=`nproc --all`
 
 if [ ! -f cut_off_energy.txt ]; then
-	echo "Cutoff Energy [eV]; Total calculated energy [eV]; Time [s]" >> cut_off_energy.txt
+	echo "Cutoff Energy [eV]; Total calculated energy per atom [eV]; Time [s]" >> cut_off_energy.txt
 fi
 
 for cutoff in `seq $first_energy $energy_step $final_energy`; do
@@ -40,7 +40,13 @@ for cutoff in `seq $first_energy $energy_step $final_energy`; do
 	fi	
 
 	time=`awk '/Total time/ {print $4}' ${fileroot}.castep`
-        echo $cutoff $energy $time >> ../cut_off_energy.txt
+
+	# determine number of atoms per UC in order to calculate the total energy per atom
+
+	natoms=`grep "Total number of ions in cell" ${fileroot}.castep | awk 'BEGIN {FS="="}; {print $2}'`
+	energy_per_atom=`python -c "print(float('$energy')/float('$natoms'))"`
+
+	echo $cutoff $energy_per_atom $time >> ../cut_off_energy.txt
 	
 	rm ${fileroot}.check ${fileroot}.bands ${fileroot}.castep_bin
 

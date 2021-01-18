@@ -14,7 +14,7 @@ name=`ls *.param`
 fileroot=`python -c "print '$name'.split('.')[0]"`
 
 if [ ! -f kpoints_mp_spacing.txt ]; then
-        echo "K-point grid density [1/Ang]; Total calculated energy [eV]; Time [s]" >> kpoints_mp_spacing.txt
+        echo "K-point grid density [1/Ang]; Total calculated energy per atom [eV]; Time [s]" >> kpoints_mp_spacing.txt
 fi
 
 while [ `python -c "print int($first_spacing >= $final_spacing)"` -eq 1 ]; do
@@ -41,7 +41,11 @@ while [ `python -c "print int($first_spacing >= $final_spacing)"` -eq 1 ]; do
         fi
 	
 	time=`awk '/Total time/ {print $4}' ${fileroot}.castep`
-        echo $first_spacing $energy $time >> ../kpoints_mp_spacing.txt
+
+	natoms=`grep "Total number of ions in cell" ${fileroot}.castep | awk 'BEGIN {FS="="}; {print $2}'`
+        energy_per_atom=`python -c "print(float('$energy')/float('$natoms'))"`
+
+        echo $first_spacing $energy_per_atom $time >> ../kpoints_mp_spacing.txt
 
 	rm ${fileroot}.check ${fileroot}.bands ${fileroot}.castep_bin
 	
