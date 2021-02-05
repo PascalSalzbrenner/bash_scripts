@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# script to convert an enthalpy plot generated using ca -e to pdf
+
+# detect fileroot
+
+file=`ls *.agr`
+fileroot=`echo ${file%-*}`
+
+grace -hardcopy ${fileroot}-enthalpy.agr -hdevice EPS -printfile ${fileroot}-enthalpy.eps
+epstopdf ${fileroot}-enthalpy.eps ${fileroot}-enthalpy.pdf
