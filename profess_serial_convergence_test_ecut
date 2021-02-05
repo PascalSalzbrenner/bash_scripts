@@ -1,0 +1,78 @@
+#!/bin/bash
+
+# run in directory containing input files for a PROFESS run
+
+first_energy=$1
+final_energy=$2
+energy_step=$3
+
+# auto-determine fileroot
+name=`ls *.inpt`
+fileroot=`python -c "print '$name'.split('.')[0]"`
+
+ncores=`nproc --all`
+
+if [ ! -f ecut.txt ]; then
+	echo "Cutoff Energy [eV]; Total calculated energy per atom [eV]; Time [s]" >> ecut.txt
+fi
+
+counter=0
+
+for cutoff in `seq $first_energy $energy_step $final_energy`; do
+	
+	mkdir ecut_${cutoff}	
+	cp ${fileroot}.* ecut_${cutoff}
+	cp *.usp* ecut_${cutoff}
+	cp *pot* ecut_${cutoff}
+	
+	cd ecut_${cutoff}
+	
+	sed -i "s/XYZ/${cutoff}/gi" ${fileroot}.inpt
+
+	profess $fileroot > profess.run &
+
+	cd ..
+
+	if [ $counter -eq $ncores ]; then
+		running_jobs=`jobs -r | tail -1`
+		# as long as this is not empty, there are running jobs
+		while [ `python -c "print int(not '$running_jobs')"` -eq 0 ]; do
+			sleep 2
+			# OFDFT jobs are quite fast, so it makes sense to check frequently
+			running_jobs=`jobs -r | tail -1`
+		done
+
+		# all jobs are done; next num_cores jobs can be started
+		counter=0
+
+	fi
+
+done
+
+running_jobs=`jobs -r | tail -1`
+# as long as this is not empty, there are running jobs
+while [ `python -c "print int(not '$running_jobs')"` -eq 0 ]; do
+        sleep 2
+        # OFDFT jobs are quite fast, so it makes sense to check frequently
+        running_jobs=`jobs -r | tail -1`
+done
+
+# do the same loop again to read output data
+
+for cutoff in `seq $first_energy $energy_step $final_energy`; do
+
+	cd ecut_${cutoff}
+
+	energy=`awk '{IGNORECASE=1} /total energy/ {print $5}' ${fileroot}.out`
+
+	time=`awk '/PROFESS/ {print $3}' ${fileroot}.out | tail -1`
+
+	# determine number of atoms per UC in order to calculate the total energy per atom
+
+	natoms=`awk '/Ion number/ {print $4}' ${fileroot}.out`
+	energy_per_atom=`python -c "print(float('$energy')/float('$natoms'))"`
+
+	echo $cutoff $energy_per_atom $time >> ../cut_off_energy.txt
+	
+	cd ..
+done
