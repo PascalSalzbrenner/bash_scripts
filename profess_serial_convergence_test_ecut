@@ -33,6 +33,8 @@ for cutoff in `seq $first_energy $energy_step $final_energy`; do
 
 	cd ..
 
+	counter=$((counter+1))
+
 	if [ $counter -eq $ncores ]; then
 		running_jobs=`jobs -r | tail -1`
 		# as long as this is not empty, there are running jobs
