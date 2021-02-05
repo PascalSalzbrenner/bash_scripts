@@ -29,7 +29,7 @@ for cutoff in `seq $first_energy $energy_step $final_energy`; do
 	
 	sed -i "s/XYZ/${cutoff}/gi" ${fileroot}.inpt
 
-	profess $fileroot > profess.run &
+	PROFESS $fileroot > profess.run &
 
 	cd ..
 
