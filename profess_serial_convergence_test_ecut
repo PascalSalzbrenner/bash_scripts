@@ -72,7 +72,7 @@ for cutoff in `seq $first_energy $energy_step $final_energy`; do
 	natoms=`awk '/Ion number/ {print $4}' ${fileroot}.out`
 	energy_per_atom=`python -c "print(float('$energy')/float('$natoms'))"`
 
-	echo $cutoff $energy_per_atom $time >> ../cut_off_energy.txt
+	echo $cutoff $energy_per_atom $time >> ../ecut.txt
 	
 	cd ..
 done
