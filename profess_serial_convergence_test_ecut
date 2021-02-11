@@ -39,7 +39,6 @@ for cutoff in `seq $first_energy $energy_step $final_energy`; do
 		running_jobs=`jobs -r | tail -1`
 		# as long as this is not empty, there are running jobs
 		while [ `python -c "print int(not '$running_jobs')"` -eq 0 ]; do
-			sleep 2
 			# OFDFT jobs are quite fast, so it makes sense to check frequently
 			running_jobs=`jobs -r | tail -1`
 		done
@@ -54,7 +53,6 @@ done
 running_jobs=`jobs -r | tail -1`
 # as long as this is not empty, there are running jobs
 while [ `python -c "print int(not '$running_jobs')"` -eq 0 ]; do
-        sleep 2
         # OFDFT jobs are quite fast, so it makes sense to check frequently
         running_jobs=`jobs -r | tail -1`
 done

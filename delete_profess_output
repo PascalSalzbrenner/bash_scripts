@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# determine file root
+name=`ls *.inpt`
+
+fileroot=`python -c "print '$name'.split('.')[0]"`
+
+for file in *; do
+
+	if [ $file != ${fileroot}.ion ] && [ $file != ${fileroot}.inpt ] &&  [ `python -c "print int(('$file'.endswith('usp') or '$file'.endswith('uspso') or '$file'.endswith('uspcc') or ('pot' in '$file')) and not ('OTF' in '$file'))"` -eq 0 ]; then
+		rm $file
+	fi
+done
