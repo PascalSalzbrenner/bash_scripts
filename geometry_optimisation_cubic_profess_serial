@@ -1,0 +1,84 @@
+#!/bin/bash
+
+# calculation must be set up to carry out a simple SCF cycle
+
+lattice_param=$1 #the initial lattice parameter
+max=$2 #the final lattice parameter
+step=$3 #by how much the lattice parameter is incremented
+
+# auto-determine fileroot
+name=`ls *.inpt`
+fileroot=`python -c "print '$name'.split('.')[0]"`
+
+ncores=`nproc --all`
+
+counter=0
+
+while [ `python -c "print int($lattice_param <= $max)"` -eq 1 ]; do
+	
+	if [ ! -d lattice_parameter_$lattice_param ]; then	
+		
+		mkdir lattice_parameter_$lattice_param
+	
+		cp ${fileroot}.inpt lattice_parameter_$lattice_param
+
+		sed "s/lattice_parameter/$lattice_param/g" ${fileroot}.ion > lattice_parameter_$lattice_param/${fileroot}.ion
+
+		cd lattice_parameter_$lattice_param
+		
+		echo "Now running PROFESS at lattice parameter $lattice_param" # I think since "all output is appended to nohup.out", this should write it into the same file as all the other output
+			
+		PROFESS $fileroot > profess.run &
+
+        	cd ..
+
+        	counter=$((counter+1))
+
+	fi
+
+	lattice_param=`echo $lattice_param + $step | bc`
+        	
+	if [ $counter -eq $ncores ]; then
+       		running_jobs=`jobs -r | tail -1`
+                # as long as this is not empty, there are running jobs
+                while [ `python -c "print int(not '$running_jobs')"` -eq 0 ]; do
+                        # OFDFT jobs are quite fast, so it makes sense to check frequently
+                        running_jobs=`jobs -r | tail -1`
+               	done
+
+               	# all jobs are done; next num_cores jobs can be started
+               	counter=0
+
+       	fi
+
+done
+
+running_jobs=`jobs -r | tail -1`
+# as long as this is not empty, there are running jobs
+while [ `python -c "print int(not '$running_jobs')"` -eq 0 ]; do
+        # OFDFT jobs are quite fast, so it makes sense to check frequently
+        running_jobs=`jobs -r | tail -1`
+done
+
+# do the same loop again to read output data
+
+lattice_param=$1 # reset to initial lattice parameter
+
+while [ `python -c "print int($lattice_param <= $max)"` -eq 1 ]; do
+
+	cd lattice_parameter_$lattice_param
+	
+	energy=`awk '{IGNORECASE=1} /total energy/ {print $5}' ${fileroot}.out`
+	volume=`awk '/Cell Volume/ {print $4}' ${fileroot}.out`
+	echo $lattice_param $volume $energy >> ../energy.txt
+
+	cd ..
+
+	lattice_param=`echo $lattice_param + $step | bc`
+
+done
+
+cp ~/bin/python_scripts/birch_murnaghan_eos_fit.py .
+python3 birch_murnaghan_eos_fit.py
+
+gnuplot energy_volume.gnu

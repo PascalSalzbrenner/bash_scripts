@@ -1,0 +1,56 @@
+#!/bin/bash
+
+# calculation must be set up to carry out a simple SCF cycle
+
+lattice_param=$1 #the initial lattice parameter
+max=$2 #the final lattice parameter
+step=$3 #by how much the lattice parameter is incremented
+
+# auto-determine fileroot
+name=`ls *.param`
+fileroot=`python -c "print '$name'.split('.')[0]"`
+
+ncores=`nproc --all`
+
+while [ `python -c "print int($lattice_param <= $max)"` -eq 1 ]; do
+	
+	if [ ! -d lattice_parameter_$lattice_param ]; then	
+		
+		mkdir lattice_parameter_$lattice_param
+	
+		cp ${fileroot}.param lattice_parameter_$lattice_param
+
+		sed "s/lattice_parameter/$lattice_param/g" ${fileroot}.cell > lattice_parameter_$lattice_param/${fileroot}.cell
+
+		cd lattice_parameter_$lattice_param
+		
+		echo "Now running CASTEP at lattice parameter $lattice_param" # I think since "all output is appended to nohup.out", this should write it into the same file as all the other output
+			
+		mpirun -n $ncores castep.mpi $fileroot
+
+		# the output format for the energy is different between SOC and not SOC calculations, so here we determine which it is
+        	is_soc=`awk '/spin-orbit coupling/ {print $4}' ${fileroot}.castep`
+
+        	if [ $is_soc == "off" ]; then
+                	# calculation is not spin-orbit coupled
+                	energy=`awk '/Final energy/ {print $5}' ${fileroot}.castep`
+        	else
+                	energy=`awk '/Final energy/ {print $4}' ${fileroot}.castep`
+        	fi
+
+		volume=`awk '/Current cell volume/ {print $5}' ${fileroot}.castep`
+
+		echo $lattice_param $volume $energy >> ../energy.txt
+
+		cd ..
+	
+	fi
+
+	lattice_param=`echo $lattice_param + $step | bc`
+
+done
+
+cp ~/bin/python_scripts/birch_murnaghan_eos_fit.py .
+python3 birch_murnaghan_eos_fit.py
+
+gnuplot energy_volume.gnu
