@@ -42,6 +42,8 @@ while [ `python -c "print int($lattice_param <= $max)"` -eq 1 ]; do
 
 		echo $lattice_param $volume $energy >> ../energy.txt
 
+		rm ${fileroot}.check ${fileroot}.castep_bin ${fileroot}.bands
+
 		cd ..
 	
 	fi
