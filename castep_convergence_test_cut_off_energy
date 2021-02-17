@@ -32,8 +32,12 @@ for cutoff in `seq $first_energy $energy_step $final_energy`; do
 	# the output format for the energy is different between SOC and not SOC calculations, so here we determine which it is
 	is_soc=`awk '/spin-orbit coupling/ {print $4}' ${fileroot}.castep`
 
-	if [ $is_soc == "off" ]; then
-		# calculation is not spin-orbit coupled
+	# the same goes for non-metallic (fix_occupancy=true) and metallic calculations
+	is_non_metallic=`awk '/non-metallic/ {print}' ${fileroot}.castep`
+	# this will be empty if the calculations is metallic
+
+	if [ $is_soc == "off" && `python -c "print int(not '$run_successful')"` -eq 1 ]; then
+		# calculation is metallic and not spin-orbit coupled
 		energy=`awk '/Final energy/ {print $5}' ${fileroot}.castep`
 	else
 		energy=`awk '/Final energy/ {print $4}' ${fileroot}.castep`
