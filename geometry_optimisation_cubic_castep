@@ -59,6 +59,6 @@ sed "s/lattice_parameter/${1}/g" ${fileroot}.cell > ${fileroot}.cell_for_fit
 cp ~/bin/python_scripts/birch_murnaghan_eos_fit.py .
 python3 birch_murnaghan_eos_fit.py castep $fileroot
 
-rm > ${fileroot}.cell_for_fit
+rm ${fileroot}.cell_for_fit
 
 gnuplot energy_volume.gnu
