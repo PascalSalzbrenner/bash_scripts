@@ -6,7 +6,7 @@ first_energy=$1
 final_energy=$2
 energy_step=$3
 
-ncores=`nproc --all`
+ncores=$((`nproc --all`/2))
 
 if [ ! -f energy_ENCUT.txt ]; then
         echo "Cutoff Energy [eV]; Total calculated energy [eV]; Time [s]" > energy_ENCUT.txt

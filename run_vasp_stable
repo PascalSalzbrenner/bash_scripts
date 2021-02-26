@@ -2,7 +2,7 @@
 
 # wrapper for VASP run, which only exits when the run has been completed successfully
 
-ncores=`nproc --all`
+ncores=$((`nproc --all`/2))
 
 while [ `python -c "print int(not '$run_successful')"` -eq 1 ]; do
 	# not '$run_successful' is true, that is, the run was not successful ($run_successful is empty)

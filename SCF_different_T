@@ -7,7 +7,7 @@ min_T=$1
 max_T=$2
 dT=$3
 
-ncores=`nproc --all`
+ncores=$((`nproc --all`/2))
 
 for i in `seq $min_T $dT $max_T`; do
 	

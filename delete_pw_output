@@ -2,7 +2,7 @@
 
 # determine prefix
 
-prefix_raw=`awk '{IGNORECASE=1}; {FS="="}; /preFix/ {print $2}' pw.in`
+prefix_raw=`awk '{IGNORECASE=1}; {FS="="}; /prefix/ {print $2}' pw.in`
 prefix=${prefix_raw%,*}
 prefix=${prefix%"'"}
 prefix=${prefix%'"'}

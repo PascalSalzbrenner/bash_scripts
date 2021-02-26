@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ncores=`nproc --all`
+ncores=$((`nproc --all`/2))
 
 # auto-determine fileroot
 name=`ls *.param`

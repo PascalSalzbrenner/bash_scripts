@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ncores=`nproc --all`
+ncores=$((`nproc --all`/2))
 
 cd Step_1
 if [ ! -f "OUTCAR" ]; then

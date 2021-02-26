@@ -6,7 +6,7 @@ first_kpoint=$1
 final_kpoint=$2
 kpoint_step=$3
 
-ncores=`nproc --all`
+ncores=$((`nproc --all`/2))
 
 ry_to_ev=13.605698066
 

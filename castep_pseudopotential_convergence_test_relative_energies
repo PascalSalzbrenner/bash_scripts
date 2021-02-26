@@ -12,7 +12,7 @@ second_structure=$2
 first_structure_name=`python3 -c "print('$first_structure'.rstrip('/').split('/')[-1])"`
 second_structure_name=`python3 -c "print('$second_structure'.rstrip('/').split('/')[-1])"`
 
-ncores=`nproc --all`
+ncores=$((`nproc --all`/2))
 
 # the radius in the pseudopotential string is given in Bohr - conversion factor to Angstrom used for output
 bohr_to_angstrom=0.529177249

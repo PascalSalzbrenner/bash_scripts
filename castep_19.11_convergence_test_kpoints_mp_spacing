@@ -7,7 +7,7 @@ first_spacing=$1
 final_spacing=$2
 spacing_reduction=$3
 
-ncores=`nproc --all`
+ncores=$((`nproc --all`/2))
 
 # auto-determine fileroot
 name=`ls *.param`

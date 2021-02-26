@@ -6,7 +6,7 @@ first_energy=$1
 final_energy=$2
 energy_step=$3
 
-ncores=`nproc --all`
+ncores=$((`nproc --all`/2))
 
 ry_to_ev=13.605698066
 

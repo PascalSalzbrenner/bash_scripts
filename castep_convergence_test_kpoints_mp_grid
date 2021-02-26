@@ -8,9 +8,8 @@ kpoint_step=$3
 
 # auto-determine fileroot
 name=`ls *.param`
-fileroot=`python -c "print '$name'.split('.')[0]"
-`
-ncores=`nproc --all`
+fileroot=`python -c "print '$name'.split('.')[0]"`
+ncores=$((`nproc --all`/2))
 
 if [ ! -f kpoint_mp_grid.txt ]; then
         echo "K-point grid; Total calculated energy per atom [eV]; Time [s]" >> kpoint_mp_grid.txt

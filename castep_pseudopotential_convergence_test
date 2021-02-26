@@ -24,7 +24,7 @@ if [ -z $r_cut_qc ]; then
 	r_cut_qc=5
 fi
 
-ncores=`nproc --all`
+ncores=$((`nproc --all`/2))
 
 # the radius in the pseudopotential string is given in Bohr - conversion factor to Angstrom used for output
 bohr_to_angstrom=0.529177249

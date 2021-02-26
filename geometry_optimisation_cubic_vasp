@@ -6,7 +6,7 @@ lattice_param=$1 #the initial lattice parameter
 max=$2 #the final lattice parameter
 step=$3 #by how much the lattice parameter is incremented
 
-ncores=`nproc --all`
+ncores=$((`nproc --all`/2))
 
 while [ `python -c "print int($lattice_param <= $max)"` -eq 1 ]; do
 	

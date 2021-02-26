@@ -10,7 +10,7 @@ step=$3 #by how much the lattice parameter is incremented
 name=`ls *.inpt`
 fileroot=`python -c "print '$name'.split('.')[0]"`
 
-ncores=`nproc --all`
+ncores=$((`nproc --all`/2))
 
 counter=0
 
