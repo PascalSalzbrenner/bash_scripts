@@ -41,13 +41,7 @@ while [ `python -c "print int($lattice_param <= $max)"` -eq 1 ]; do
 	lattice_param=`echo $lattice_param + $step | bc`
         	
 	if [ $counter -eq $ncores ]; then
-       		running_jobs=`jobs -r | tail -1`
-                # as long as this is not empty, there are running jobs
-                while [ `python -c "print int(not '$running_jobs')"` -eq 0 ]; do
-                        # OFDFT jobs are quite fast, so it makes sense to check frequently
-                        running_jobs=`jobs -r | tail -1`
-               	done
-
+		wait
                	# all jobs are done; next num_cores jobs can be started
                	counter=0
 
