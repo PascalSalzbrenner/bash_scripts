@@ -8,7 +8,7 @@ kpoint_step=$3
 
 # auto-determine fileroot
 name=`ls *.param`
-fileroot=`python -c "print '$name'.split('.')[0]"`
+fileroot=`python3 -c "print('$name'.split('.')[0])"`
 ncores=$((`nproc --all`/2))
 
 if [ ! -f kpoint_mp_grid.txt ]; then
@@ -35,7 +35,7 @@ for kpoint in `seq $first_kpoint $kpoint_step $final_kpoint`; do
         is_non_metallic=`awk '/non-metallic/ {print}' ${fileroot}.castep`
         # this will be empty if the calculations is metallic
 
-        if [ $is_soc == "off" ] && [ `python -c "print int(not '$run_successful')"` -eq 1 ]; then
+        if [ $is_soc == "off" ] && [ `python3 -c "print(int(not '$run_successful'))"` -eq 1 ]; then
                 # calculation is metallic and not spin-orbit coupled
                 energy=`awk '/Final energy/ {print $5}' ${fileroot}.castep`
         else
@@ -45,7 +45,7 @@ for kpoint in `seq $first_kpoint $kpoint_step $final_kpoint`; do
 	time=`awk '/Total time/ {print $4}' ${fileroot}.castep`
 
 	natoms=`grep "Total number of ions in cell" ${fileroot}.castep | awk 'BEGIN {FS="="}; {print $2}'`
-        energy_per_atom=`python -c "print(float('$energy')/float('$natoms'))"`
+        energy_per_atom=`python3 -c "print(float('$energy')/float('$natoms'))"`
 
         echo "$kpoint x $kpoint x $kpoint" $energy_per_atom $time >> ../kpoint_mp_grid.txt
 
