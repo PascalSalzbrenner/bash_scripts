@@ -2,14 +2,14 @@
 
 chgcar_del=`grep "ICHARG" INCAR`
 
-if [ `python -c "print int(('$chgcar_del'.split('=')[1].startswith('1 ')) or ('$chgcar_del'.split('=')[1].startswith('1!')) or ('$chgcar_del'.split('=')[1].startswith('1#')) or ('$chgcar_del'.split('=')[1].startswith('11')))"` -eq 0 ]; then
+if [ `python3 -c "print(int(('$chgcar_del'.split('=')[1].startswith('1 ')) or ('$chgcar_del'.split('=')[1].startswith('1!')) or ('$chgcar_del'.split('=')[1].startswith('1#')) or ('$chgcar_del'.split('=')[1].startswith('11'))))"` -eq 0 ]; then
 	# don't delete CHGCAR if were trying to read the charge density from it - indicated by ICHARG=1, 11
 	rm CHGCAR
 fi
 
 wavecar_del=`grep "ISTART" INCAR`
 
-if [ `python -c "print int('$wavecar_del'.split('=')[1].startswith('0'))"` -eq 1 ]; then
+if [ `python3 -c "print(int('$wavecar_del'.split('=')[1].startswith('0')))"` -eq 1 ]; then
        rm WAVECAR
 fi
 

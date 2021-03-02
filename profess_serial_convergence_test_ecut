@@ -8,7 +8,7 @@ energy_step=$3
 
 # auto-determine fileroot
 name=`ls *.inpt`
-fileroot=`python -c "print '$name'.split('.')[0]"`
+fileroot=`python3 -c "print('$name'.split('.')[0])"`
 
 ncores=$((`nproc --all`/2))
 
@@ -44,12 +44,7 @@ for cutoff in `seq $first_energy $energy_step $final_energy`; do
 
 done
 
-running_jobs=`jobs -r | tail -1`
-# as long as this is not empty, there are running jobs
-while [ `python -c "print int(not '$running_jobs')"` -eq 0 ]; do
-        # OFDFT jobs are quite fast, so it makes sense to check frequently
-        running_jobs=`jobs -r | tail -1`
-done
+wait
 
 # do the same loop again to read output data
 
@@ -64,7 +59,7 @@ for cutoff in `seq $first_energy $energy_step $final_energy`; do
 	# determine number of atoms per UC in order to calculate the total energy per atom
 
 	natoms=`awk '/Ion number/ {print $4}' ${fileroot}.out`
-	energy_per_atom=`python -c "print(float('$energy')/float('$natoms'))"`
+	energy_per_atom=`python3 -c "print(float('$energy')/float('$natoms'))"`
 
 	echo $cutoff $energy_per_atom $time >> ../ecut.txt
 	

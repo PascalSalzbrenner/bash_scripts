@@ -34,7 +34,7 @@ for cutoff in `seq $first_energy $energy_step $final_energy`; do
 
 	natoms_raw=`awk '{IGNORECASE=1}; {FS="="}; /nat/ {print $2}' pw.in`
 	natoms=`echo ${natoms_raw%,*}`
-	energy_per_atom=`python -c "print(float('$energy')*float('$ry_to_ev')/float('$natoms'))"`
+	energy_per_atom=`python3 -c "print(float('$energy')*float('$ry_to_ev')/float('$natoms'))"`
 
 	echo $cutoff $energy_per_atom $time >> ../ecutwfc.txt
 	

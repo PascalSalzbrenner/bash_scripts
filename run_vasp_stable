@@ -4,7 +4,7 @@
 
 ncores=$((`nproc --all`/2))
 
-while [ `python -c "print int(not '$run_successful')"` -eq 1 ]; do
+while [ `python3 -c "print(int(not '$run_successful'))"` -eq 1 ]; do
 	# not '$run_successful' is true, that is, the run was not successful ($run_successful is empty)
 	# also true at the first step, where $run_successful is unset and we have an empty string
 

@@ -10,9 +10,9 @@ kz=$7
 # the k-point components in reciprocal coordinates
 
 # update k-coordinates for consistent writing with Python
-kx=`python -c "print(str(float("$kx")))"`
-ky=`python -c "print(str(float("$ky")))"`
-kz=`python -c "print(str(float("$kz")))"`
+kx=`python3 -c "print(str(float("$kx")))"`
+ky=`python3 -c "print(str(float("$ky")))"`
+kz=`python3 -c "print(str(float("$kz")))"`
 
 higher_band=$((lower_band+1))
 
@@ -31,8 +31,8 @@ for i in `seq $T_min $T_step $T_max`; do
 
 	lower_energy=`awk '/Energy/ {print $3}' band_${lower_band}_k_${kx}_${ky}_${kz}_energy.dat`
 	higher_energy=`awk '/Energy/ {print $3}' band_${higher_band}_k_${kx}_${ky}_${kz}_energy.dat`
-	band_difference=`python -c "print(float('$higher_energy')-float('$lower_energy'))"`
-	band_difference_change=`python -c "print(1000*float('$band_difference')-1000*float('$static_band_difference'))"`
+	band_difference=`python3 -c "print(float('$higher_energy')-float('$lower_energy'))"`
+	band_difference_change=`python3 -c "print(1000*float('$band_difference')-1000*float('$static_band_difference'))"`
 
 	echo $i $band_difference $band_difference_change >> ../bands_${lower_band}_${higher_band}_k_${kx}_${ky}_${kz}_difference_temperature.dat
 	

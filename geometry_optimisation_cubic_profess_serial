@@ -8,13 +8,13 @@ step=$3 #by how much the lattice parameter is incremented
 
 # auto-determine fileroot
 name=`ls *.inpt`
-fileroot=`python -c "print '$name'.split('.')[0]"`
+fileroot=`python3 -c "print('$name'.split('.')[0])"`
 
 ncores=$((`nproc --all`/2))
 
 counter=0
 
-while [ `python -c "print int($lattice_param <= $max)"` -eq 1 ]; do
+while [ `python3 -c "print(int($lattice_param <= $max))"` -eq 1 ]; do
 	
 	if [ ! -d lattice_parameter_$lattice_param ]; then	
 		
@@ -51,7 +51,7 @@ done
 
 running_jobs=`jobs -r | tail -1`
 # as long as this is not empty, there are running jobs
-while [ `python -c "print int(not '$running_jobs')"` -eq 0 ]; do
+while [ `python3 -c "print(int(not '$running_jobs'))"` -eq 0 ]; do
         # OFDFT jobs are quite fast, so it makes sense to check frequently
         running_jobs=`jobs -r | tail -1`
 done
@@ -60,7 +60,7 @@ done
 
 lattice_param=$1 # reset to initial lattice parameter
 
-while [ `python -c "print int($lattice_param <= $max)"` -eq 1 ]; do
+while [ `python3 -c "print(int($lattice_param <= $max))"` -eq 1 ]; do
 
 	cd lattice_parameter_$lattice_param
 	
