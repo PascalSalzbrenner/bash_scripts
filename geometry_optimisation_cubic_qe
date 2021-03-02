@@ -1,0 +1,59 @@
+#!/bin/bash
+
+# calculation must be set up to carry out a simple SCF cycle
+
+lattice_param=$1 #the initial lattice parameter
+max=$2 #the final lattice parameter
+step=$3 #by how much the lattice parameter is incremented
+
+ry_to_ev=13.605698066
+bohr_to_angstrom=0.52917721067
+
+ncores=`nproc --all`
+
+if [ ! -f energy.txt ]; then
+	echo "# Lattice Parameter [Bohr]; Volume [A^3]; Energy [eV]" > energy.txt 
+fi
+
+while [ `python3 -c "print(int($lattice_param <= $max))"` -eq 1 ]; do
+	
+	if [ ! -d lattice_parameter_$lattice_param ]; then	
+		
+		mkdir lattice_parameter_$lattice_param
+	
+		sed "s/lattice_parameter/$lattice_param/g" pw.in > lattice_parameter_$lattice_param/pw.in
+		cp *upf lattice_parameter_$lattice_param
+		cp *UPF lattice_parameter_$lattice_param
+
+		cd lattice_parameter_$lattice_param
+		
+		echo "Now running Quantum Espresso pw.x at lattice parameter $lattice_param" # I think since "all output is appended to nohup.out", this should write it into the same file as all the other output
+			
+		mpirun -np $ncores pw.x -i pw.in > pw.out
+
+		energy=`awk '/total energy/ {print $5}' pw.out | tail -2 | head -1`
+		energy=`python3 -c "print(float('$energy')*float('$ry_to_ev'))"`
+
+		volume=`awk '/unit-cell volume/ {print $4}' pw.out`
+		volume=`python3 -c "print(float('$volume')*float('$bohr_to_angstrom')**3)"`
+
+		echo $lattice_param $volume $energy >> ../energy.txt
+
+		rm -r *.save
+
+		cd ..
+	
+	fi
+
+	lattice_param=`echo $lattice_param + $step | bc`
+
+done
+
+sed "s/lattice_parameter/${1}/g" pw.in > pw.in_for_fit
+
+cp ~/bin/python_scripts/birch_murnaghan_eos_fit.py .
+python3 birch_murnaghan_eos_fit.py qe $fileroot
+
+rm pw.in_for_fit
+
+gnuplot energy_volume.gnu
