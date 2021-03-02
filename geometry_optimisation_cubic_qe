@@ -51,9 +51,10 @@ done
 
 cd lattice_parameter_$1
 c2x --int pw.in
+cd ..
+
 space_group=`cat nohup.out | tail -1 | awk '{print $NF}'`
 echo $space_group
-cd ..
 
 cp ~/bin/python_scripts/birch_murnaghan_eos_fit.py .
 python3 birch_murnaghan_eos_fit.py $space_group
