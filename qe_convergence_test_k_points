@@ -34,7 +34,7 @@ for kpoint in `seq $first_kpoint $kpoint_step $final_kpoint`; do
 
         natoms_raw=`awk '{IGNORECASE=1}; {FS="="}; /nat/ {print $2}' pw.in`
         natoms=`echo ${natoms_raw%,*}`
-        energy_per_atom=`python -c "print(float('$energy')*float('$ry_to_ev')/float('$natoms'))"`
+        energy_per_atom=`python3 -c "print(float('$energy')*float('$ry_to_ev')/float('$natoms'))"`
 
         echo "$kpoint x $kpoint x $kpoint" $energy_per_atom $time >> ../k_points.txt
 

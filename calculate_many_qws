@@ -21,17 +21,7 @@ for i in `seq $1 $2`; do
                 python3 CamTB.py &
 
                 # halt execution here until all jobs have finished
-
-                a=`jobs -r`
-                b=`echo $a` # to get rid of the newline if there are several running jobs
-
-                while [ `python -c "print int(not '$b')"` -eq 0 ]; do
-                        # there are still running jobs
-                        sleep 60 # pause for 60 seconds and check again
-
-                        a=`jobs -r`
-                        b=`echo $a` # to get rid of the newline if there are several running jobs
-                done
+		wait
 
                 counter=1 # when this execution finishes, we start the next $run_at_once number of calculations
         else

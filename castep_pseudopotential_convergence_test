@@ -31,9 +31,9 @@ bohr_to_angstrom=0.529177249
 
 # auto-determine fileroot
 name=`ls *.param`
-fileroot=`python -c "print '$name'.split('.')[0]"`
+fileroot=`python3 -c "print('$name'.split('.')[0])"`
 
-while [ `python -c "print int($r_max >= $r_min)"` -eq 1 ]; do
+while [ `python3 -c "print(int($r_max >= $r_min))"` -eq 1 ]; do
 	
 	# write file containing cutoff radius and cutoff energy
 	if [ ! -f cutoff_radius_energy.txt ]; then
@@ -87,7 +87,7 @@ while [ `python -c "print int($r_max >= $r_min)"` -eq 1 ]; do
         	is_non_metallic=`awk '/non-metallic/ {print}' ${fileroot}.castep`
         	# this will be empty if the calculations is metallic
 
-        	if [ $is_soc == "off" ] && [ `python -c "print int(not '$run_successful')"` -eq 1 ]; then
+		if [ $is_soc == "off" ] && [ `python3 -c "print(int(not '$run_successful'))"` -eq 1 ]; then
 			# calculation is metallic and not spin-orbit coupled
 			energy=`awk '/Final energy/ {print $5}' ${fileroot}.castep`
 		else
@@ -101,7 +101,7 @@ while [ `python -c "print int($r_max >= $r_min)"` -eq 1 ]; do
 		
 		cd ..
 
-		if [ `python -c "print int(abs($energy-$previous_energy) > $convergence_threshold)"` -eq 1 ]; then
+		if [ `python3 -c "print(int(abs($energy-$previous_energy) > $convergence_threshold))"` -eq 1 ]; then
 			
 			# the condition is not fulfilled at this step - (re)set the counter to 0
 			num_threshold_passed=0

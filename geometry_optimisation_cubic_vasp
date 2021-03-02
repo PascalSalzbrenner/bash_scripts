@@ -8,7 +8,7 @@ step=$3 #by how much the lattice parameter is incremented
 
 ncores=`nproc --all`
 
-while [ `python -c "print int($lattice_param <= $max)"` -eq 1 ]; do
+while [ `python3 -c "print(int($lattice_param <= $max))"` -eq 1 ]; do
 	
 	if [ ! -d lattice_parameter_$lattice_param ]; then	
 		
@@ -35,7 +35,7 @@ while [ `python -c "print int($lattice_param <= $max)"` -eq 1 ]; do
         	fi
 
 		volume_line=`grep "volume" OUTCAR | tail -1`
-		volume=`python -c "print '$volume_line'.split()[-1]"`
+		volume=`python3 -c "print('$volume_line'.split()[-1])"`
 
 		echo $lattice_param $volume $energy >> ../energy.txt
 

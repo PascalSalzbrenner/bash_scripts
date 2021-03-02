@@ -8,7 +8,7 @@ energy_step=$3
 
 # auto-determine fileroot
 name=`ls *.param`
-fileroot=`python -c "print '$name'.split('.')[0]"`
+fileroot=`python3 -c "print('$name'.split('.')[0])"`
 
 ncores=`nproc --all`
 
@@ -36,7 +36,7 @@ for cutoff in `seq $first_energy $energy_step $final_energy`; do
 	is_non_metallic=`awk '/non-metallic/ {print}' ${fileroot}.castep`
 	# this will be empty if the calculations is metallic
 
-	if [ $is_soc == "off" ] && [ `python -c "print int(not '$run_successful')"` -eq 1 ]; then
+	if [ $is_soc == "off" ] && [ `python3 -c "print(int(not '$run_successful'))"` -eq 1 ]; then
 		# calculation is metallic and not spin-orbit coupled
 		energy=`awk '/Final energy/ {print $5}' ${fileroot}.castep`
 	else
@@ -48,7 +48,7 @@ for cutoff in `seq $first_energy $energy_step $final_energy`; do
 	# determine number of atoms per UC in order to calculate the total energy per atom
 
 	natoms=`grep "Total number of ions in cell" ${fileroot}.castep | awk 'BEGIN {FS="="}; {print $2}'`
-	energy_per_atom=`python -c "print(float('$energy')/float('$natoms'))"`
+	energy_per_atom=`python3 -c "print(float('$energy')/float('$natoms'))"`
 
 	echo $cutoff $energy_per_atom $time >> ../cut_off_energy.txt
 	

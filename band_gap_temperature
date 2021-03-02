@@ -17,7 +17,7 @@ for i in `seq $T_min $T_step $T_max`; do
 	python3 band_gap.py
 
 	band_gap=`awk '/Band Gap/ {print $4}' band_gap.dat`
-	band_gap_change=`python -c "print(1000*float('$band_gap')-1000*float('$static_band_gap'))"`
+	band_gap_change=`python3 -c "print(1000*float('$band_gap')-1000*float('$static_band_gap'))"`
 
 	echo $i $band_gap $band_gap_change >> ../band_gap_temperature.dat
 	

@@ -48,7 +48,7 @@ for i in `seq $min_T $dT $max_T`; do
 
 		run_successful=`grep "General" OUTCAR` # when VASP completes a job successfully, it prints some "General timing and accounting informations for this job" at the very end of OUTCAR. Thus, if the job terminates prematurely, run_successful will be empty
 
-                while [ `python -c "print int(not '$run_successful')"` -eq 1 ]; do
+		while [ `python3 -c "print(int(not '$run_successful'))"` -eq 1 ]; do
                         # not '$run_successful' is true, that is, the run was not successful ($run_successful is empty)
                         delete_vasp_output
 
