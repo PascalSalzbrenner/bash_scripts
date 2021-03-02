@@ -58,11 +58,14 @@ while [ `python3 -c "print(int($lattice_param <= $max))"` -eq 1 ]; do
 
 done
 
-sed "s/lattice_parameter/${1}/g" ${fileroot}.cell > ${fileroot}.cell_for_fit
+cd lattice_parameter_$1
+c2x --int ${fileroot}.cell
+cd ..
+
+space_group=`cat nohup.out | tail -1 | awk '{print $NF}'`
+echo $space_group
 
 cp ~/bin/python_scripts/birch_murnaghan_eos_fit.py .
-python3 birch_murnaghan_eos_fit.py castep $fileroot
-
-rm ${fileroot}.cell_for_fit
+python3 birch_murnaghan_eos_fit.py $space_group
 
 gnuplot energy_volume.gnu
