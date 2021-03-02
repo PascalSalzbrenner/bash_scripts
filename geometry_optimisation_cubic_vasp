@@ -8,6 +8,10 @@ step=$3 #by how much the lattice parameter is incremented
 
 ncores=$((`nproc --all`/2))
 
+if [ ! -f energy.txt ]; then
+        echo "# Lattice Parameter [Bohr]; Volume [A^3]; Energy [eV]" > energy.txt
+fi
+
 while [ `python3 -c "print(int($lattice_param <= $max))"` -eq 1 ]; do
 	
 	if [ ! -d lattice_parameter_$lattice_param ]; then	
