@@ -52,6 +52,7 @@ done
 cd lattice_parameter_$1
 c2x --int pw.in
 cd ..
+
 space_group=`cat nohup.out | tail -1 | awk '{print $NF}'`
 echo $space_group
 
