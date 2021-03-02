@@ -9,7 +9,7 @@ step=$3 #by how much the lattice parameter is incremented
 ry_to_ev=13.605698066
 bohr_to_angstrom=0.52917721067
 
-ncores=`nproc --all`
+ncores=$((`nproc --all`/2))
 
 if [ ! -f energy.txt ]; then
 	echo "# Lattice Parameter [Bohr]; Volume [A^3]; Energy [eV]" > energy.txt 
@@ -51,9 +51,9 @@ done
 
 cd lattice_parameter_$1
 c2x --int pw.in
+cd ..
 space_group=`cat nohup.out | tail -1 | awk '{print $NF}'`
 echo $space_group
-cd ..
 
 cp ~/bin/python_scripts/birch_murnaghan_eos_fit.py .
 python3 birch_murnaghan_eos_fit.py $space_group
