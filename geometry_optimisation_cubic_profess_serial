@@ -78,12 +78,8 @@ while [ `python3 -c "print(int($lattice_param <= $max))"` -eq 1 ]; do
 
 done
 
-cd lattice_parameter_$1
-c2x --int ${fileroot}.ion
-cd ..
-
+c2x --int lattice_parameter_${1}/${fileroot}.ion
 space_group=`cat nohup.out | tail -1 | awk '{print $NF}'`
-echo $space_group
 
 cp ~/bin/python_scripts/birch_murnaghan_eos_fit.py .
 python3 birch_murnaghan_eos_fit.py $space_group
