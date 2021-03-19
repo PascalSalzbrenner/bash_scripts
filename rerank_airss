@@ -1,0 +1,44 @@
+#!/bin/bash
+
+# script to setup a directory with the .res files corresponding a user-input top proportion of energies found in an AIRSS search
+# this can then be run with crud.pl
+# like with the press script, before running this script the user must supply a .param and a rump .cell file, containing all the desired components (in contrast to the press script, this includes the pressure) except for the lattice and atomic positions, with the same seed
+# these files must be in the directory rerank, which is at the same level as the AIRSS search directory in which this script is run
+
+# inspired by the press script
+if [ $# -lt 2 ]; then
+  echo 'usage: rerank <proportion> <seed>'
+  exit 1
+fi
+
+# input variables
+prop=$1 # the proportion of energies in which a result must lie compared to the most favourable structure found to be considered in the rerank 0 < prop <= 1
+seed=$2
+
+# make hopper directory
+mkdir ../rerank/hopper
+
+# determine the ranking
+ca -r > ranking.txt
+
+# energy of the least favourable of all structures found
+highest_energy=`awk 'END {print $4}' ranking.txt`
+
+# determine proportion
+energy_prop=`python3 -c "print(float('$prop')*float('$highest_energy'))"`
+
+# best structure needs to be handled differently as its energy is given in absolute rather than relative terms
+file_id=`awk 'NR==1 {print $1}' ranking.txt`
+cp ${file_id}.res ../rerank/hopper
+
+# read file
+while read line; do
+
+	if [ `python3 -c "print(int(float('$line'.split()[3]) <= float('$energy_prop')))"` -eq 1 ]; then
+		file_id=`echo $line | awk '{print $1}'`
+		cp ${file_id}.res ../rerank/hopper
+	fi
+
+done < ranking.txt
+
+rm ranking.txt

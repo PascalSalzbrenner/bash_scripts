@@ -1,0 +1,65 @@
+#!/bin/bash
+
+# with some inspiration from https://www.cp2k.org/howto:converging_cutoff
+# run in directory containing input file ${fileroot}.inp for a CP2k run
+
+first_energy=$1
+final_energy=$2
+energy_step=$3
+
+# auto-determine fileroot
+name=`ls *.inp`
+fileroot=`python3 -c "print('$name'.split('.')[0])"`
+
+# determine number of grids
+num_grids=`awk '/NGRIDS/ {print $2}' ${fileroot}.inp`
+
+ncores=`nproc --all`
+
+ha_to_ev=27.211396132
+
+if [ ! -f rel_cutoff.txt ]; then
+	printf "Relative Cutoff Energy [Ry]; Total calculated energy per atom [eV]; " >> rel_cutoff.txt
+
+	for i in `seq 1 $num_grids`; do
+		printf "NG on Grid ${i}; " >> rel_cutoff.txt
+	done
+
+	printf "Time\n" >> rel_cutoff.txt
+fi
+
+for cutoff in `seq $first_energy $energy_step $final_energy`; do
+	
+	mkdir rel_cutoff_${cutoff}	
+	cp *BASIS* rel_cutoff_${cutoff}
+	cp *POTENTIAL* rel_cutoff_${cutoff}
+	
+	sed "s/XYZ/${cutoff}/gi" ${fileroot}.inp > rel_cutoff_${cutoff}/${fileroot}.inp
+	
+	cd rel_cutoff_${cutoff}
+
+	mpirun -np $ncores cp2k.popt -o ${fileroot}.out ${fileroot}.inp
+	
+	energy=`grep "ENERGY" ${fileroot}.out | tail -1 | awk '{print $9}'`
+
+	time=`grep "CP2K" ${fileroot}.out | tail -1 | awk '{print $6}'`
+
+	# determine number of atoms per UC in order to calculate the total energy per atom
+
+	natoms=`awk '/- Atoms/ {print $3}' ${fileroot}.out`
+	energy_per_atom=`python3 -c "print(float('$energy')*float('$ha_to_ev')/float('$natoms'))"`
+
+	printf "$cutoff $energy_per_atom " >> ../rel_cutoff.txt
+
+	for i in `seq 1 $num_grids`; do
+		num_gaussians=`grep "count for grid" ${fileroot}.out | awk -v igrid=$i '(NR == igrid) {print $5}'`
+		
+		printf "$num_gaussians " >> ../rel_cutoff.txt
+	done	
+
+	printf "${time}\n" >> ../rel_cutoff.txt
+	
+	rm -r ${fileroot}-RESTART.wfn*
+
+	cd ..
+done
