@@ -35,7 +35,7 @@ for kpoint in `seq $first_kpoint $kpoint_step $final_kpoint`; do
         is_non_metallic=`awk '/non-metallic/ {print}' ${fileroot}.castep`
         # this will be empty if the calculations is metallic
 
-	if [ $is_soc == "off" ] && [ `python3 -c "print(int(not '$run_successful'))"` -eq 1 ]; then
+	if [ $is_soc == "off" ] && [ `python3 -c "print(int(not '$is_non_metallic'))"` -eq 1 ]; then
                 # calculation is metallic and not spin-orbit coupled
                 energy=`awk '/Final energy/ {print $5}' ${fileroot}.castep`
         else
