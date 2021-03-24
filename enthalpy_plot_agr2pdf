@@ -5,7 +5,9 @@
 # detect fileroot
 
 file=`ls *.agr`
-fileroot=`echo ${file%-*}`
+fileroot=`echo ${file%.*}`
 
-grace -hardcopy ${fileroot}-enthalpy.agr -hdevice EPS -printfile ${fileroot}-enthalpy.eps
-epstopdf ${fileroot}-enthalpy.eps ${fileroot}-enthalpy.pdf
+grace -hardcopy ${fileroot}.agr -hdevice EPS -printfile ${fileroot}.eps
+epstopdf ${fileroot}.eps ${fileroot}.pdf
+
+rm ${fileroot}.eps
