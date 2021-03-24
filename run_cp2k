@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ncores=`nproc --all`
+ncores=$((`nproc --all`/2))
 
 # determine filename
 name=`ls *.inp`
