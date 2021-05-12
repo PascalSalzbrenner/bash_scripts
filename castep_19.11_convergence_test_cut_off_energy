@@ -27,7 +27,7 @@ for cutoff in `seq $first_energy $energy_step $final_energy`; do
 	
 	sed -i "s/XYZ/${cutoff}/gi" ${fileroot}.param
 
-	mpirun -n $ncores ~/bin/CASTEP-19.11/castep.mpi $fileroot
+	mpirun -n $ncores ~/mtg_bin/CASTEP-19.11/castep.mpi $fileroot
 	
 	# the output format for the energy is different between SOC and not SOC calculations, so here we determine which it is
 	is_soc=`awk '/spin-orbit coupling/ {print $4}' ${fileroot}.castep`
