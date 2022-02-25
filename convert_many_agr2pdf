@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# script to convert one or more .agr xmgrace input files into PDF
+
+# detect fileroot
+
+for file in `ls *.agr`; do
+	fileroot=`echo ${file%.*}`
+
+	grace -hardcopy ${fileroot}.agr -hdevice EPS -printfile ${fileroot}.eps
+	epstopdf ${fileroot}.eps ${fileroot}.pdf
+
+	rm ${fileroot}.eps
+done
