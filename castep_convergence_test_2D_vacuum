@@ -1,0 +1,55 @@
+#!/bin/bash
+
+# run in directory containing input files for a CASTEP run
+
+first_spacing=$1
+final_spacing=$2
+kpoint_spacing=$3
+
+# auto-determine fileroot
+name=`ls *.param`
+fileroot=`python3 -c "print('$name'.split('.')[0])"`
+ncores=$((`nproc --all`/2))
+
+if [ ! -f vacuum_spacing.txt ]; then
+        echo "vacuum spacing [Ang]; Total calculated energy per atom [eV]; Time [s]" >> vacuum_spacing.txt
+fi
+
+for spacing in `seq $first_spacing $kpoint_spacing $final_spacing`; do
+	
+	mkdir vacuum_spacing_${spacing}
+	cp ${fileroot}.* vacuum_spacing_${spacing}
+	cp *.usp* vacuum_spacing_${spacing}
+	cp *pot* vacuum_spacing_${spacing}
+	
+	cd vacuum_spacing_${spacing}
+	
+	sed -i "s/AAA/${spacing}/gi" ${fileroot}.cell
+
+	mpirun -n $ncores castep.mpi $fileroot
+
+	# the output format for the energy is different between SOC and not SOC calculations, so here we determine which it is
+	is_soc=`awk '/spin-orbit coupling/ {print $4}' ${fileroot}.castep`
+
+	# the same goes for non-metallic (fix_occupancy=true) and metallic calculations
+        is_non_metallic=`awk '/non-metallic/ {print}' ${fileroot}.castep`
+        # this will be empty if the calculations is metallic
+
+	if [ $is_soc == "off" ] && [ `python3 -c "print(int(not '$is_non_metallic'))"` -eq 1 ]; then
+                # calculation is metallic and not spin-orbit coupled
+                energy=`awk '/Final energy/ {print $5}' ${fileroot}.castep`
+        else
+                energy=`awk '/Final energy/ {print $4}' ${fileroot}.castep`
+        fi
+	
+	time=`awk '/Total time/ {print $4}' ${fileroot}.castep`
+
+	natoms=`grep "Total number of ions in cell" ${fileroot}.castep | awk 'BEGIN {FS="="}; {print $2}'`
+        energy_per_atom=`python3 -c "print(float('$energy')/float('$natoms'))"`
+
+        echo $spacing $energy_per_atom $time >> ../vacuum_spacing.txt
+
+	rm ${fileroot}.check ${fileroot}.bands ${fileroot}.castep_bin
+
+	cd ..
+done
