@@ -1,0 +1,11 @@
+#!/bin/bash
+
+seed=$1
+
+for i in *.cif; do
+	fileroot=`echo ${i%.*}`
+	c2x --cell $i > ${fileroot}.cell
+	cabal cell res < ${fileroot}.cell > ${seed}-${fileroot}.res
+done
+
+rm *.cell *.cif
