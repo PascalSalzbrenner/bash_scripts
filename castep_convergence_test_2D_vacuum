@@ -9,7 +9,7 @@ kpoint_spacing=$3
 # auto-determine fileroot
 name=`ls *.param`
 fileroot=`python3 -c "print('$name'.split('.')[0])"`
-ncores=$((`nproc --all`/2))
+ncores=`nproc --all`
 
 if [ ! -f vacuum_spacing.txt ]; then
         echo "vacuum spacing [Ang]; Total calculated energy per atom [eV]; Time [s]" >> vacuum_spacing.txt
