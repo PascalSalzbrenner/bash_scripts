@@ -37,7 +37,7 @@ while [ `python3 -c "print(int($first_spacing >= $final_spacing))"` -eq 1 ]; do
         is_non_metallic=`awk '/non-metallic/ {print}' ${fileroot}.castep`
         # this will be empty if the calculations is metallic
 
-	if [ $is_soc == "off" ] && [ `python3 -c "print(int(not '$is_non_metallic'))"` -eq 1 ]; then
+	if [ $is_soc == "off" ] && [ `python3 -c "print(int(not '$is_non_metallic'))"` -eq 1 ] || [ $is_soc == "on" ]; then
                 # calculation is metallic not spin-orbit coupled
                 energy=`awk '/Final energy/ {print $5}' ${fileroot}.castep`
         else
