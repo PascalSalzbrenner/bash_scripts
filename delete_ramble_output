@@ -1,0 +1,3 @@
+#!/bin/bash
+
+rm -r *.xyze *.track *-out.cell ramble.* STOP PRESS TEMP DAMP
