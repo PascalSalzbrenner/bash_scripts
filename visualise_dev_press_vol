@@ -48,7 +48,7 @@ form_name=`awk 'NR==1 {print $1}' temp_ca | awk 'BEGIN {FS="_"} {print $1}'`
 
 # copy them into the directory if they don't exist yet
 if [ ! -f ${form_name}.eddp ] || [ ! -d ${form_name} ]; then
-	cp -r ../${form_name}.{,.eddp} .
+	cp -r ../${form_name}{,.eddp} .
 fi
 
 echo "set terminal postscript eps colour font 'Helvetica,20'" > dev_press.gnu
