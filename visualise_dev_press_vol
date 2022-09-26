@@ -32,15 +32,15 @@ done
 ca -r -l >> temp_ca
 
 if [ -z $low_press ]; then
-	low_press=`cat temp_ca | awk 'NR==1 {print $2}' | awk 'BEGIN {FS="."} {print $1}'`
+	low_press=`awk 'NR==1 {print $2}' temp_ca | awk 'BEGIN {FS="."} {print $1}'`
 fi
 
 if [ -z $high_press ]; then
-	high_press=`cat temp_ca | awk 'END{print $2}' | awk 'BEGIN {FS="."} {print $1}'`
+	high_press=`awk 'END{print $2}' temp_ca | awk 'BEGIN {FS="."} {print $1}'`
 fi
 
 if [ -z $struc_name ]; then
-	struc_name=`(cat temp_ca | awk -v press_name="_${low_press}p0" '$0 ~ press_name {print $1}' | awk 'BEGIN {FS="-"} {print $2}')`
+	struc_name=`(awk -v press_name="_${low_press}p0" '$0 ~ press_name {print $1}' temp_ca | awk 'BEGIN {FS="-"} {print $2}')`
 fi
 
 echo "set terminal postscript eps colour font 'Helvetica,20'" > dev_press.gnu
