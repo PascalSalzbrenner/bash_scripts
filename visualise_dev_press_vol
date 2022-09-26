@@ -43,6 +43,14 @@ if [ -z $struc_name ]; then
 	struc_name=`(awk -v press_name="_${low_press}p0" '$0 ~ press_name {print $1}' temp_ca | awk 'BEGIN {FS="-"} {print $2}')`
 fi
 
+# determine the name of the .eddp file and directory
+form_name=`awk 'NR==1 {print $1}' temp_ca | awk 'BEGIN {FS="_"} {print $1}'`
+
+# copy them into the directory if they don't exist yet
+if [ ! -f ${form_name}.eddp ] || [ ! -d ${form_name} ]; then
+	cp -r ../${form_name}.{,.eddp} .
+fi
+
 echo "set terminal postscript eps colour font 'Helvetica,20'" > dev_press.gnu
 echo "set terminal postscript eps colour font 'Helvetica,20'" > dev_vol.gnu
 
