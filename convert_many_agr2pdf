@@ -7,7 +7,7 @@
 for file in `ls *.agr`; do
 	fileroot=`echo ${file%.*}`
 
-	grace -hardcopy ${fileroot}.agr -hdevice EPS -printfile ${fileroot}.eps
+	xmgrace -hardcopy ${fileroot}.agr -hdevice EPS -printfile ${fileroot}.eps
 	epstopdf ${fileroot}.eps ${fileroot}.pdf
 
 	rm ${fileroot}.eps
