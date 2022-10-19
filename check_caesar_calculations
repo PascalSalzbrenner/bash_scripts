@@ -1,0 +1,29 @@
+#!/bin/bash
+
+for i in Supercell_*; do
+	
+	cd $i
+	
+	for j in atom.*; do 
+		
+		cd $j
+		
+		for k in *tive; do
+			
+			cd $k
+			
+			if [ ! -f finished.txt ]; then
+				pwd
+			fi
+			
+			cd ..
+		
+		done
+		
+		cd ..
+	
+	done
+	
+	cd ..
+
+done
