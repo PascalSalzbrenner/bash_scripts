@@ -44,6 +44,12 @@ if [ -z $struc_name ]; then
 	struc_name=`(awk -v press_name="_${low_press}p0" '$0 ~ press_name {print $1}' temp_ca | awk 'BEGIN {FS="p0-"} {print $2}')`
 fi
 
+# because the pressures result from geometry optimisations, they often won't be exact integers - eg if we demand 100 GPa, we may bet 99.9, or 100.1 GPa
+# this can cause problems when comparing the pressures below to determine whether or not a certain pressure should be included according to what the user specified
+# so here we widen the pressure range by 1 in each direction - this ought usually to be less than the pressure increment, but sufficient for the precision to which we can get a pressure
+low_press=$((low_press-1))
+high_press=$((high_press-1))
+
 echo "set terminal postscript eps colour font 'Helvetica,20'" > dev_press.gnu
 echo "set terminal postscript eps colour font 'Helvetica,20'" > dev_vol.gnu
 
