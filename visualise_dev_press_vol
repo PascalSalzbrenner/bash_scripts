@@ -48,7 +48,7 @@ fi
 # this can cause problems when comparing the pressures below to determine whether or not a certain pressure should be included according to what the user specified
 # so here we widen the pressure range by 1 in each direction - this ought usually to be less than the pressure increment, but sufficient for the precision to which we can get a pressure
 low_press=$((low_press-1))
-high_press=$((high_press-1))
+high_press=$((high_press+1))
 
 # gnuplot changed how it plots dashed lines with version 5. Here we support both the old and now format (although they will come out looking different)
 # determine gnuplot version
