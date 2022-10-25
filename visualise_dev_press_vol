@@ -104,8 +104,6 @@ for sn in ${struc_name[@]}; do
 		fu=`echo $line | awk '{print $6}'`
 	
 		if (( $(echo "press >= (low_press)" |bc -l)  )) && (( $(echo "press <= (high_press)" |bc -l)  )); then 
-			
-			echo $press
 		
 			# read number of atoms per formula unit
 			fu_arr=( ${fu//[!0-9]/ } )
