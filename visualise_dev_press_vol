@@ -29,18 +29,18 @@ while getopts ":l:p:n:h" opt; do
 done
 
 # set up temporary file to contain the output of ca -r -l so that we don't have to run it all the time
-ca -r -l >> temp_ca
+ca -r -l > temp_ca
 
 if [ -z $low_press ]; then
-	low_press=`cat temp_ca | awk 'NR==1 {print $2}' | awk 'BEGIN {FS="."} {print $1}'`
+	low_press=`awk 'NR==1 {print $1}' temp_ca | awk 'BEGIN {FS="_"} {print $2}' | awk 'BEGIN {FS="p0"} {print $1}'`
 fi
 
 if [ -z $high_press ]; then
-	high_press=`cat temp_ca | awk 'END{print $2}' | awk 'BEGIN {FS="."} {print $1}'`
+	high_press=`awk 'END{print $2}' temp_ca | awk 'BEGIN {FS="."} {print $1}'`
 fi
 
 if [ -z $struc_name ]; then
-	struc_name=`(cat temp_ca | awk -v press_name="_${low_press}p0" '$0 ~ press_name {print $1}' | awk 'BEGIN {FS="-"} {print $2}')`
+	struc_name=`(awk -v press_name="_${low_press}p0" '$0 ~ press_name {print $1}' temp_ca | awk 'BEGIN {FS="p0-"} {print $2}')`
 fi
 
 echo "set terminal postscript eps colour font 'Helvetica,20'" > dev_press.gnu
@@ -92,7 +92,7 @@ press_plot="plot"
 vol_plot="plot"
 
 for sn in ${struc_name[@]}; do
-	
+
 	echo "# Pressure [GPa]; Volume [A**3/atom]; Deviation [meV/atom]" > dev_press_vol_${sn}.txt
 
 	while read line; do
@@ -103,7 +103,9 @@ for sn in ${struc_name[@]}; do
 		nform=`echo $line | awk '{print $5}'`
 		fu=`echo $line | awk '{print $6}'`
 	
-		if (( $(echo "press >= low_press" |bc -l)  )) && (( $(echo "press <= high_press" |bc -l)  )); then
+		if (( $(echo "press >= (low_press)" |bc -l)  )) && (( $(echo "press <= (high_press)" |bc -l)  )); then 
+			
+			echo $press
 		
 			# read number of atoms per formula unit
 			fu_arr=( ${fu//[!0-9]/ } )
@@ -118,7 +120,7 @@ for sn in ${struc_name[@]}; do
 			# calculate dev
 
 			# create appropriate EDDP file for res2dev
-			form_press_name=${seed%-*} # this should be of the form GaH_100p0
+			form_press_name=`echo $seed | awk 'BEGIN {FS="-"} {print $1}'`   # this should be of the form GaH_100p0
 			if [ ! -f ${form_press_name}.eddp ]; then
 				form_name=${form_press_name%_*}
 				cp ${form_name}.eddp ${form_press_name}.eddp
