@@ -50,8 +50,21 @@ fi
 low_press=$((low_press-1))
 high_press=$((high_press-1))
 
-echo "set terminal postscript eps colour font 'Helvetica,20'" > dev_press.gnu
-echo "set terminal postscript eps colour font 'Helvetica,20'" > dev_vol.gnu
+# gnuplot changed how it plots dashed lines with version 5. Here we support both the old and now format (although they will come out looking different)
+# determine gnuplot version
+
+gp_version=`gnuplot --version | awk '{print $2}'`
+if (( $(echo "$gp_version < 5" |bc -l)  )); then
+	# old - does not support setting dash types and so, in the interest of uniformity, all lines are rendered solid
+	echo "set terminal postscript eps colour solid font 'Helvetica,20'" > dev_press.gnu
+	echo "set terminal postscript eps colour solid font 'Helvetica,20'" > dev_vol.gnu
+	dash_type=""
+else
+	# new - we set the same dash type for every line
+	echo "set terminal postscript eps colour font 'Helvetica,20'" > dev_press.gnu
+        echo "set terminal postscript eps colour font 'Helvetica,20'" > dev_vol.gnu
+	dash_type="dt 2"
+fi
 
 echo "set style data points" >> dev_press.gnu
 echo "set style data points" >> dev_vol.gnu
@@ -65,28 +78,28 @@ echo "set key top center" >> dev_vol.gnu
 echo "set key box lt -1 lw 2 width 2 height 1.5 opaque font 'Helvetica,15'" >> dev_press.gnu
 echo "set key box lt -1 lw 2 width 2 height 1.5 opaque font 'Helvetica,15'" >> dev_vol.gnu
 
-echo "set linetype 1 lc rgb '#DC143C'" >> dev_press.gnu
-echo "set linetype 2 lc rgb '#D95F02'" >> dev_press.gnu
-echo "set linetype 3 lc rgb '#FFCC00'" >> dev_press.gnu
-echo "set linetype 4 lc rgb '#66A61E'" >> dev_press.gnu
-echo "set linetype 5 lc rgb '#191970'" >> dev_press.gnu
-echo "set linetype 6 lc rgb '#7570B3'" >> dev_press.gnu
-echo "set linetype 7 lc rgb '#E7298A'" >> dev_press.gnu
-echo "set linetype 8 lc rgb '#1E90FF'" >> dev_press.gnu
-echo "set linetype 9 lc rgb '#1B9E77'" >> dev_press.gnu
-echo "set linetype 10 lc rgb '#B8860B'" >> dev_press.gnu
+echo "set linetype 1 lc rgb '#DC143C'" $dash_type >> dev_press.gnu
+echo "set linetype 2 lc rgb '#D95F02'" $dash_type >> dev_press.gnu
+echo "set linetype 3 lc rgb '#FFCC00'" $dash_type >> dev_press.gnu
+echo "set linetype 4 lc rgb '#66A61E'" $dash_type >> dev_press.gnu
+echo "set linetype 5 lc rgb '#191970'" $dash_type >> dev_press.gnu
+echo "set linetype 6 lc rgb '#7570B3'" $dash_type >> dev_press.gnu
+echo "set linetype 7 lc rgb '#E7298A'" $dash_type >> dev_press.gnu
+echo "set linetype 8 lc rgb '#1E90FF'" $dash_type >> dev_press.gnu
+echo "set linetype 9 lc rgb '#1B9E77'" $dash_type >> dev_press.gnu
+echo "set linetype 10 lc rgb '#B8860B'" $dash_type  >> dev_press.gnu
 echo "set linetype cycle 10" >> dev_press.gnu
 
-echo "set linetype 1 lc rgb '#DC143C'" >> dev_vol.gnu
-echo "set linetype 2 lc rgb '#D95F02'" >> dev_vol.gnu
-echo "set linetype 3 lc rgb '#FFCC00'" >> dev_vol.gnu
-echo "set linetype 4 lc rgb '#66A61E'" >> dev_vol.gnu
-echo "set linetype 5 lc rgb '#191970'" >> dev_vol.gnu
-echo "set linetype 6 lc rgb '#7570B3'" >> dev_vol.gnu
-echo "set linetype 7 lc rgb '#E7298A'" >> dev_vol.gnu
-echo "set linetype 8 lc rgb '#1E90FF'" >> dev_vol.gnu
-echo "set linetype 9 lc rgb '#1B9E77'" >> dev_vol.gnu
-echo "set linetype 10 lc rgb '#B8860B'" >> dev_vol.gnu
+echo "set linetype 1 lc rgb '#DC143C'" $dash_type >> dev_vol.gnu
+echo "set linetype 2 lc rgb '#D95F02'" $dash_type >> dev_vol.gnu
+echo "set linetype 3 lc rgb '#FFCC00'" $dash_type >> dev_vol.gnu
+echo "set linetype 4 lc rgb '#66A61E'" $dash_type >> dev_vol.gnu
+echo "set linetype 5 lc rgb '#191970'" $dash_type >> dev_vol.gnu
+echo "set linetype 6 lc rgb '#7570B3'" $dash_type >> dev_vol.gnu
+echo "set linetype 7 lc rgb '#E7298A'" $dash_type >> dev_vol.gnu
+echo "set linetype 8 lc rgb '#1E90FF'" $dash_type >> dev_vol.gnu
+echo "set linetype 9 lc rgb '#1B9E77'" $dash_type >> dev_vol.gnu
+echo "set linetype 10 lc rgb '#B8860B'" $dash_type >> dev_vol.gnu
 echo "set linetype cycle 10" >> dev_vol.gnu
 
 echo "set xlabel 'Pressure [GPa]'" >> dev_press.gnu
@@ -144,8 +157,8 @@ for sn in ${struc_name[@]}; do
 	vol_plot+=" 'dev_press_vol_${sn}.txt' u 2:3 w linespoints pt 7 ps 1.5 lw 2.5 title '${title}',"
 done
 
-press_plot=${press_plot::-1}
-vol_plot=${vol_plot::-1}
+press_plot=${press_plot::-1} 2> /dev/null
+vol_plot=${vol_plot::-1} 2> /dev/null
 
 echo $press_plot >> dev_press.gnu
 echo $vol_plot >> dev_vol.gnu
