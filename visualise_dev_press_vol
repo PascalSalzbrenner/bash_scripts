@@ -21,7 +21,7 @@ while getopts ":l:p:n:h" opt; do
 			echo "Optional arguments"
 			echo "-l low_press [GPa]  : the lowest pressure which is taken into account"
 			echo "-p high_press [GPa] : the highest pressure which is taken into account"
-			echo "-s struc_name       : the names of structures which are taken into account - in the AIRSS seed 'format formula-struc_name', the required part here is, well, struc_name"
+			echo "-s struc_name       : the names of structures which are taken into account - in the AIRSS seed format 'formula-struc_name', the required part here is, well, struc_name"
 			echo "-h                  : print this message and exit"
 			echo "If no variables are supplied, all structures are taken into account for all pressures"
 			exit 1
