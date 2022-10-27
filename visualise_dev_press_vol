@@ -2,7 +2,7 @@
 
 # optional arguments: -l for lowest pressure, -p for highest pressure, -n for the names of the structures we want to take into account, -h for help string
 
-while getopts ":l:p:n:h" opt; do
+while getopts ":l:p:n:fh" opt; do
 	case $opt in
 		l)
 			low_press=$OPTARG;;
@@ -14,14 +14,17 @@ while getopts ":l:p:n:h" opt; do
 				struc_name+=($(eval "echo \${$OPTIND}"))
 				OPTIND=$((OPTIND + 1))
 			done;;
+		f)      
+			frac=true;;
 		h)
 			echo "Script to calculate the EDDP deviations of a range of structures at a range of pressures and plot them (nicely, maybe)"
-			echo "Usage: visualise_dev_press_vol [-l low_press] [-p high_press] [-n struc_name1 struc_name2 ...]"
+			echo "Usage: visualise_dev_press_vol [-l low_press] [-p high_press] [-n struc_name1 struc_name2 ...] [-f]"
 			echo ""
 			echo "Optional arguments"
 			echo "-l low_press [GPa]  : the lowest pressure which is taken into account"
 			echo "-p high_press [GPa] : the highest pressure which is taken into account"
-			echo "-s struc_name       : the names of structures which are taken into account - in the AIRSS seed format 'formula-struc_name', the required part here is, well, struc_name"
+			echo "-n struc_name       : the names of structures which are taken into account - in the AIRSS seed format 'formula-struc_name', the required part here is, well, struc_name"
+			echo "-f                  : calculate the deviation as a fraction (percentage) of the total energy"
 			echo "-h                  : print this message and exit"
 			echo ""
 			echo "If no variables are supplied, all structures are taken into account for all pressures"
@@ -42,6 +45,13 @@ fi
 
 if [ -z $struc_name ]; then
 	struc_name=`(awk -v press_name="_${low_press}p0" '$0 ~ press_name {print $1}' temp_ca | awk 'BEGIN {FS="p0-"} {print $2}')`
+fi
+
+if [ -z $frac ]; then
+	frac=false
+	energy_label="Deviation [meV/atom]"
+else
+	energy_label="Deviation/Total energy [%]"
 fi
 
 # because the pressures result from geometry optimisations, they often won't be exact integers - eg if we demand 100 GPa, we may bet 99.9, or 100.1 GPa
@@ -105,15 +115,15 @@ echo "set linetype cycle 10" >> dev_vol.gnu
 echo "set xlabel 'Pressure [GPa]'" >> dev_press.gnu
 echo "set xlabel 'Volume [A^3/atom]'" >> dev_vol.gnu
 
-echo "set ylabel 'Deviation [meV/atom]'" >> dev_press.gnu
-echo "set ylabel 'Deviation [meV/atom]'" >> dev_vol.gnu
+echo "set ylabel '$energy_label'" >> dev_press.gnu
+echo "set ylabel '$energy_label'" >> dev_vol.gnu
 
 press_plot="plot"
 vol_plot="plot"
 
 for sn in ${struc_name[@]}; do
 
-	echo "# Pressure [GPa]; Volume [A**3/atom]; Deviation [meV/atom]" > dev_press_vol_${sn}.txt
+	echo "# Pressure [GPa]; Volume [A**3/atom]; $energy_label" > dev_press_vol_${sn}.txt
 
 	while read line; do
 
@@ -122,6 +132,8 @@ for sn in ${struc_name[@]}; do
 		vol=`echo $line | awk '{print $3}'`
 		nform=`echo $line | awk '{print $5}'`
 		fu=`echo $line | awk '{print $6}'`
+
+		energy=`awk '/TITL/ {print $5}' ${seed}.res`
 	
 		if (( $(echo "$press >= $low_press" | bc -l)  )) && (( $(echo "$press <= $high_press" | bc -l)  )); then 
 		
@@ -145,7 +157,13 @@ for sn in ${struc_name[@]}; do
 			fi
 
 			dev=`res2dev $seed | awk '{print $2}'`
-			dev_per_atom=$(awk "BEGIN {print $dev*1000/$natoms; exit}")
+			
+			if [ "$frac" = false ]; then
+				dev_per_atom=$(awk "BEGIN {print $dev*1000/$natoms; exit}")
+			else
+				# not really dev_per_atom; instead dev as a fraction of the total energy, but we keep the label for consistency with the case where frac == false
+				dev_per_atom=$(awk "BEGIN {print $dev*(-100)/$energy; exit}")
+			fi
 			
 			echo $press $vol $dev_per_atom >> dev_press_vol_${sn}.txt
 		fi
