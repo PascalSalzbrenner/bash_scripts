@@ -136,13 +136,20 @@ for sn in ${struc_name[@]}; do
 		energy=`awk '/TITL/ {print $5}' ${seed}.res`
 	
 		if (( $(echo "$press >= $low_press" | bc -l)  )) && (( $(echo "$press <= $high_press" | bc -l)  )); then 
-		
-			# read number of atoms per formula unit
-			fu_arr=( ${fu//[!0-9]/ } )
-			natoms_fu=0
-			for i in ${fu_arr[@]}; do
-				natoms_fu=$(echo "$natoms_fu + $i" | bc -l)
-			done
+			
+			# check whether the formula unit has one or several elements by checking if $fu contains numbers
+			if [[ $fu =~ .*[0-9].* ]]; then
+				
+				# read number of atoms per formula unit
+				fu_arr=( ${fu//[!0-9]/ } )
+				natoms_fu=0
+				for i in ${fu_arr[@]}; do
+					natoms_fu=$(echo "$natoms_fu + $i" | bc -l)
+				done
+			else
+				# only one element - the number of atoms per fu is the number of atoms per cell, as the cell is the fu
+				natoms_fu=1
+			fi
 
 			# calculate number of atoms per cell
 			natoms=$(( natoms_fu*nform ))
