@@ -4,10 +4,11 @@
 
 # detect fileroot
 
-file=`ls *.agr`
-fileroot=`echo ${file%.*}`
+for file in *.agr; do
+	fileroot=`echo ${file%.*}`
 
-grace -hardcopy ${fileroot}.agr -hdevice EPS -printfile ${fileroot}.eps
-epstopdf ${fileroot}.eps ${fileroot}.pdf
+	xmgrace -hardcopy ${fileroot}.agr -hdevice EPS -printfile ${fileroot}.eps
+	epstopdf ${fileroot}.eps ${fileroot}.pdf
 
-rm ${fileroot}.eps
+	rm ${fileroot}.eps
+done
