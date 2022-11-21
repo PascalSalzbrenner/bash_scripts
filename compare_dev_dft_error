@@ -29,24 +29,24 @@ done
 
 # generate gnuplot script
 
-echo "set terminal postscript eps colour font 'Helvetica,20'" > dev_press.gnu
-echo "set style data points" >> dev_press.gnu
-echo "set key top left" >> dev_press.gnu
-echo "set key box lt -1 lw 2 width 2 height 1.5 opaque font 'Helvetica,15'" >> dev_press.gnu
-echo "set output '| epstopdf --filter --outfile=dft_error_deviation_comparison.pdf'" >> dev_press.gnu
-echo "set xlabel '| Error compared to DFT | [meV/atom]'" >> dev_press.gnu
-echo "set ylabel 'Deviation [meV/atom]'" >> dev_press.gnu
+echo "set terminal postscript eps colour font 'Helvetica,20'" > dft_error_deviation_comparison.gnu
+echo "set style data points" >> dft_error_deviation_comparison.gnu
+echo "set key top left" >> dft_error_deviation_comparison.gnu
+echo "set key box lt -1 lw 2 width 2 height 1.5 opaque font 'Helvetica,20'" >> dft_error_deviation_comparison.gnu
+echo "set output '| epstopdf --filter --outfile=dft_error_deviation_comparison.pdf'" >> dft_error_deviation_comparison.gnu
+echo "set xlabel '| Error compared to DFT | [meV/atom]'" >> dft_error_deviation_comparison.gnu
+echo "set ylabel 'Deviation [meV/atom]'" >> dft_error_deviation_comparison.gnu
 
-echo "set linetype 1 lc rgb '#DC143C'" >> dev_press.gnu
-echo "set linetype 2 lc rgb '#FFCC00'" >> dev_press.gnu
-echo "set linetype 3 lc rgb '#66A61E'" >> dev_press.gnu
-echo "set linetype 4 lc rgb '#191970'" >> dev_press.gnu
-echo "set linetype 5 lc rgb '#7570B3'" >> dev_press.gnu
-echo "set linetype 6 lc rgb '#E7298A'" >> dev_press.gnu
-echo "set linetype 7 lc rgb '#1E90FF'" >> dev_press.gnu
-echo "set linetype 8 lc rgb '#1B9E77'" >> dev_press.gnu
-echo "set linetype 9 lc rgb '#B8860B'" >> dev_press.gnu
-echo "set linetype cycle 9" >> dev_press.gnu
+echo "set linetype 1 lc rgb '#DC143C'" >> dft_error_deviation_comparison.gnu
+echo "set linetype 2 lc rgb '#FFCC00'" >> dft_error_deviation_comparison.gnu
+echo "set linetype 3 lc rgb '#66A61E'" >> dft_error_deviation_comparison.gnu
+echo "set linetype 4 lc rgb '#191970'" >> dft_error_deviation_comparison.gnu
+echo "set linetype 5 lc rgb '#7570B3'" >> dft_error_deviation_comparison.gnu
+echo "set linetype 6 lc rgb '#E7298A'" >> dft_error_deviation_comparison.gnu
+echo "set linetype 7 lc rgb '#1E90FF'" >> dft_error_deviation_comparison.gnu
+echo "set linetype 8 lc rgb '#1B9E77'" >> dft_error_deviation_comparison.gnu
+echo "set linetype 9 lc rgb '#B8860B'" >> dft_error_deviation_comparison.gnu
+echo "set linetype cycle 9" >> dft_error_deviation_comparison.gnu
 
 plot="plot"
 
@@ -58,5 +58,5 @@ done
 
 plot=${plot::-1} 2> /dev/null
 
-echo $plot >> dev_press.gnu
-gnuplot dev_press.gnu
+echo $plot >> dft_error_deviation_comparison.gnu
+gnuplot dft_error_deviation_comparison.gnu
