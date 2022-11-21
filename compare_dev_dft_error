@@ -1,0 +1,32 @@
+#!/bin/bash
+
+dft_path=$1 # path to the DFT results
+
+echo "# Structure; | Error compared to DFT | [meV/atom]; Deviation [meV/atom]" > dft_error_deviation_comparison.txt
+
+# iterate over all .res files - the same ones must be present in the DFT directory
+for i in *.res; do
+	
+	# read relevant quantities
+	natoms=`awk 'NR==1{print $8}' $i`
+	energy_eddp=`awk 'NR==1{print $5}' $i`
+	energy_dft=`awk 'NR==1{print $5}' ${dft_path}/${i}`
+	dev=`res2dev ${i%.*} | awk '{print $2}'`
+	
+	# calculate the error compared to DFT and convert to meV/atom
+	energy_difference=$(awk "BEGIN {print sqrt(($energy_eddp-($energy_dft))^2)*1000/$natoms; exit}")
+	dev_per_atom=$(awk "BEGIN {print $dev*1000/$natoms; exit}")
+
+	echo ${i%.*} $energy_difference $dev_per_atom >> dft_error_deviation_comparison.txt
+
+done
+
+# generate gnuplot scripts
+
+echo "set terminal postscript eps colour font 'Helvetica,20'" > dev_press.gnu
+echo "set style data points" >> dev_press.gnu
+echo "set output '| epstopdf --filter --outfile=dft_error_deviation_comparison.pdf'" >> dev_press.gnu
+echo "set xlabel '| Error compared to DFT | [meV/atom]'" >> dev_press.gnu
+echo "set ylabel 'Deviation [meV/atom]'" >> dev_press.gnu
+echo "plot 'dft_error_deviation_comparison.txt' u 2:3 w points pt 7 ps 2 lc rgb '#DC143C' notitle" >> dev_press.gnu
+gnuplot dev_press.gnu
