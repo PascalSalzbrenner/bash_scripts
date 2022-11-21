@@ -1,0 +1,177 @@
+#!/bin/bash
+
+# optional arguments: -l for lowest pressure, -p for highest pressure, -n for the names of the structures we want to take into account, -h for help string
+
+while getopts "d:l:p:n:h" opt; do
+	case $opt in
+		d)
+			dft_path=$OPTARG;;
+		l)
+			low_press=$OPTARG;;
+		p)
+			high_press=$OPTARG;;
+		n)
+			struc_name=("$OPTARG")
+			until [[ $(eval "echo \${$OPTIND}") =~ ^-.* ]] || [ -z $(eval "echo \${$OPTIND}") ]; do
+				struc_name+=($(eval "echo \${$OPTIND}"))
+				OPTIND=$((OPTIND + 1))
+			done;;
+		h)
+			echo "Script to calculate the EDDP deviations of a range of structures at a range of pressures and plot them (nicely, maybe)"
+			echo "Usage: visualise_err_press_vol [-l low_press] [-p high_press] [-n struc_name1 struc_name2 ...] [-f]"
+			echo ""
+			echo "Optional arguments"
+			echo "-l low_press [GPa]  : the lowest pressure which is taken into account"
+			echo "-p high_press [GPa] : the highest pressure which is taken into account"
+			echo "-n struc_name       : the names of structures which are taken into account - in the AIRSS seed format 'formula-struc_name', the required part here is, well, struc_name"
+			echo "-f                  : calculate the deviation as a fraction (percentage) of the total energy"
+			echo "-h                  : print this message and exit"
+			echo ""
+			echo "If no variables are supplied, all structures are taken into account for all pressures"
+			exit 1
+	esac
+done
+
+# set up temporary file to contain the output of ca -r -l so that we don't have to run it all the time
+ca -r -l > temp_ca
+
+if [ -z dft_path ]; then
+	echo "ERROR: Path to DFT results must be supplied"
+	exit 1
+fi
+
+if [ -z $low_press ]; then
+	low_press=`awk 'NR==1 {print $1}' temp_ca | awk 'BEGIN {FS="_"} {print $2}' | awk 'BEGIN {FS="p0"} {print $1}'`
+fi
+
+if [ -z $high_press ]; then
+	high_press=`awk 'END{print $2}' temp_ca | awk 'BEGIN {FS="."} {print $1}'`
+fi
+
+if [ -z $struc_name ]; then
+	struc_name=`(awk -v press_name="_${low_press}p0" '$0 ~ press_name {print $1}' temp_ca | awk 'BEGIN {FS="p0-"} {print $2}')`
+fi
+
+# because the pressures result from geometry optimisations, they often won't be exact integers - eg if we demand 100 GPa, we may bet 99.9, or 100.1 GPa
+# this can cause problems when comparing the pressures below to determine whether or not a certain pressure should be included according to what the user specified
+# so here we widen the pressure range by 1 in each direction - this ought usually to be less than the pressure increment, but sufficient for the precision to which we can get a pressure
+low_press=$((low_press-1))
+high_press=$((high_press+1))
+
+# gnuplot changed how it plots dashed lines with version 5. Here we support both the old and now format (although they will come out looking different)
+# determine gnuplot version
+
+gp_version=`gnuplot --version | awk '{print $2}'`
+if (( $(echo "$gp_version < 5" |bc -l)  )); then
+	# old - does not support setting dash types and so, in the interest of uniformity, all lines are rendered solid
+	echo "set terminal postscript eps colour solid font 'Helvetica,20'" > err_press.gnu
+	echo "set terminal postscript eps colour solid font 'Helvetica,20'" > err_vol.gnu
+	dash_type=""
+else
+	# new - we set the same dash type for every line
+	echo "set terminal postscript eps colour font 'Helvetica,20'" > err_press.gnu
+        echo "set terminal postscript eps colour font 'Helvetica,20'" > err_vol.gnu
+	dash_type="dt 2"
+fi
+
+echo "set style data points" >> err_press.gnu
+echo "set style data points" >> err_vol.gnu
+
+echo "set output '| epstopdf --filter --outfile=err_press.pdf'" >> err_press.gnu
+echo "set output '| epstopdf --filter --outfile=err_vol.pdf'" >> err_vol.gnu
+
+echo "set key top center" >> err_press.gnu
+echo "set key top center" >> err_vol.gnu
+
+echo "set key box lt -1 lw 2 width 2 height 1.5 opaque font 'Helvetica,20'" >> err_press.gnu
+echo "set key box lt -1 lw 2 width 2 height 1.5 opaque font 'Helvetica,20'" >> err_vol.gnu
+
+echo "set linetype 1 lc rgb '#DC143C'" $dash_type >> err_press.gnu
+echo "set linetype 2 lc rgb '#FFCC00'" $dash_type >> err_press.gnu
+echo "set linetype 3 lc rgb '#66A61E'" $dash_type >> err_press.gnu
+echo "set linetype 4 lc rgb '#191970'" $dash_type >> err_press.gnu
+echo "set linetype 5 lc rgb '#7570B3'" $dash_type >> err_press.gnu
+echo "set linetype 6 lc rgb '#E7298A'" $dash_type >> err_press.gnu
+echo "set linetype 7 lc rgb '#1E90FF'" $dash_type >> err_press.gnu
+echo "set linetype 8 lc rgb '#1B9E77'" $dash_type >> err_press.gnu
+echo "set linetype 9 lc rgb '#B8860B'" $dash_type  >> err_press.gnu
+echo "set linetype cycle 9" >> err_press.gnu
+
+echo "set linetype 1 lc rgb '#DC143C'" $dash_type >> err_vol.gnu
+echo "set linetype 2 lc rgb '#FFCC00'" $dash_type >> err_vol.gnu
+echo "set linetype 3 lc rgb '#66A61E'" $dash_type >> err_vol.gnu
+echo "set linetype 4 lc rgb '#191970'" $dash_type >> err_vol.gnu
+echo "set linetype 5 lc rgb '#7570B3'" $dash_type >> err_vol.gnu
+echo "set linetype 6 lc rgb '#E7298A'" $dash_type >> err_vol.gnu
+echo "set linetype 7 lc rgb '#1E90FF'" $dash_type >> err_vol.gnu
+echo "set linetype 8 lc rgb '#1B9E77'" $dash_type >> err_vol.gnu
+echo "set linetype 9 lc rgb '#B8860B'" $dash_type >> err_vol.gnu
+echo "set linetype cycle 9" >> err_vol.gnu
+
+echo "set xlabel 'Pressure [GPa]'" >> err_press.gnu
+echo "set xlabel 'Volume [A^3/atom]'" >> err_vol.gnu
+
+echo "set ylabel '| Error compared to DFT | [meV/atom]'" >> err_press.gnu
+echo "set ylabel '| Error compared to DFT | [meV/atom]'" >> err_vol.gnu
+
+press_plot="plot"
+vol_plot="plot"
+
+for sn in ${struc_name[@]}; do
+
+	echo "# Pressure [GPa]; Volume [A**3/atom]; Error [meV/atom]" > err_press_vol_${sn}.txt
+
+	while read line; do
+
+		seed=`echo $line | awk '{print $1}'`
+		press=`echo $line | awk '{print $2}'`
+		vol=`echo $line | awk '{print $3}'`
+		nform=`echo $line | awk '{print $5}'`
+		fu=`echo $line | awk '{print $6}'`
+
+		eddp_energy=`awk '/TITL/ {print $5}' ${seed}.res`
+		dft_energy=`awk '/TITL/ {print $5}' ${dft_path}/${seed}.res`
+
+		if (( $(echo "$press >= $low_press" | bc -l)  )) && (( $(echo "$press <= $high_press" | bc -l)  )); then 
+			
+			# check whether the formula unit has one or several elements by checking if $fu contains numbers
+			if [[ $fu =~ .*[0-9].* ]]; then
+				
+				# read number of atoms per formula unit
+				fu_arr=( ${fu//[!0-9]/ } )
+				natoms_fu=0
+				for i in ${fu_arr[@]}; do
+					natoms_fu=$(echo "$natoms_fu + $i" | bc -l)
+				done
+			else
+				# only one element - the number of atoms per fu is the number of atoms per cell, as the cell is the fu
+				natoms_fu=1
+			fi
+
+			# calculate number of atoms per cell
+			natoms=$(( natoms_fu*nform ))
+
+			# calculate error
+
+			err=$(awk "BEGIN {print sqrt(($eddp_energy-($dft_energy))^2)*1000/$natoms; exit}")
+			
+			echo $press $vol $err >> err_press_vol_${sn}.txt
+		fi
+	done < <(awk -v pattern=$sn '$0 ~ pattern {print}' temp_ca)
+
+	title="`echo $sn | sed 's/_/\\\_/g'`"
+
+	press_plot+=" 'err_press_vol_${sn}.txt' u 1:3 w linespoints pt 7 ps 1.5 lw 2.5 title '${title}',"
+	vol_plot+=" 'err_press_vol_${sn}.txt' u 2:3 w linespoints pt 7 ps 1.5 lw 2.5 title '${title}',"
+done
+
+press_plot=${press_plot::-1} 2> /dev/null
+vol_plot=${vol_plot::-1} 2> /dev/null
+
+echo $press_plot >> err_press.gnu
+echo $vol_plot >> err_vol.gnu
+
+rm temp_ca 
+
+gnuplot err_press.gnu
+gnuplot err_vol.gnu
