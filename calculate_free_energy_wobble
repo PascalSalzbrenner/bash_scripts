@@ -1,0 +1,96 @@
+#!/bin/bash
+
+# script that uses the EDDP wobble phonon code to estimate the Gibbs free energy as a function of temperature in the quasiharmonic approximation
+# it does this on the basis of an existing enthalpy calculation done the AIRSS style, and must be run in a good_castep directory
+
+while getopts ":t:s:n:r:h" opt; do
+        case $opt in
+                t)
+			# maximum temperature at which we evaluate the vibrational energy
+                        max_temp=$OPTARG;;
+                s)
+			# step between temperatures
+                        t_step=$OPTARG;;
+                n)
+			# number of atoms for the supercell
+			natoms_supercell=$OPTARG;;
+		r)
+			# the structure against which to reference the final plots
+			reference_structure=$OPTARG;;
+                h)
+                        echo "Script to calculate the free energy of structures at different temperatures"
+                        echo "Usage: calculate_free_energy_wobble [-t max_temp] [-s t_step] [-n natoms_supercell]"
+                        echo ""
+                        echo "Optional arguments"
+                        echo "-t max_temp [K]        : the highest temperature at which the vibrational energy is evaluated"
+                        echo "-s t_step [K]          : the increment between successive temperatures at which the vibrational energy is evaluated "
+                        echo "-n natoms_supercell    : the number of atoms in the supercell used for the phonon calculation"
+                        echo "-r reference_structure : the structure against which to reference the final plots - the following part of a res file name: seed-reference_structure.res"
+                        echo "-h                     : print this message and exit"
+                        echo ""
+                        echo "If no variables are supplied, the following defaults are used: -t 500 -s 25 -n 1000. The reference structure is whichever is alphabetically first."
+                        exit 1
+        esac
+done
+
+if [ -z max_temp ]; then
+	max_temp=500
+fi
+
+if [ -z t_step ]; then
+	t_step=25
+fi
+
+if [ -z natoms_supercell ]; then
+	natoms_supercell=1000
+fi
+
+if [ -z reference_structure ]; then
+	first_structure=`ls *.res | head -1`
+	reference_structure=${first_structure#*-}
+	reference_structure=${reference_structure%.*}
+fi
+
+# translate [max_temp, step] into the wobble-used [max_temp,ntemp]
+ntemp=$(awk "BEGIN {print 1+$max_temp/$t_step; exit}")
+
+# iterate over every single res file present in the directory
+for i in *.res; do
+	seed=`${i%.*}`
+	form_press_name=`echo $i | awk 'BEGIN {FS="-"} {print $1}'`
+	
+	# copy the relevant .eddp to match the complete fileroot of the .res file
+	cp ${form_press_name}.eddp ${seed}.eddp
+
+	# run wobble - stdout contains nothing but the energies [eV] as a function of temperature
+	wobble -therm -natom $natoms_supercell -unit meV -tmax $max_temp -ntemp $ntemp $seed 1> ${seed}_temperature_energy.dat 2> wobble.log
+	
+	while read line; do
+
+		temp=`echo $line | awk '{print $1}'`
+		energy=`echo $line | awk '{print $1}'`
+
+		if [ ! -d temp_${temp}_K ]; then
+			mkdir temp_${temp}_K
+		fi
+
+		# add the vibrational energy to the enthalpy
+		awk -v CONVFMT=%.14g -v awk_energy=$energy '/TITL/ {gsub($5, $5+awk_energy)} 1' $i > temp_${temp}_K/${i}
+
+	done < ${seed}_temperature_energy.dat
+	
+	rm ${seed}.eddp	
+
+done
+
+# the pressure must now be rescaled to account for the phonon contribution to this quantity
+
+for i in temp_*_K; do
+	cd $i
+
+	cp ~/bin/python_scripts/Caesar/calculate_phonon_pressure.py
+
+	python3 calculate_phonon_pressure.py $reference_structure
+
+	cd ..
+done
