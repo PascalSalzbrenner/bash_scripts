@@ -33,19 +33,19 @@ while getopts ":t:s:n:r:h" opt; do
         esac
 done
 
-if [ -z max_temp ]; then
+if [ -z $max_temp ]; then
 	max_temp=500
 fi
 
-if [ -z t_step ]; then
+if [ -z $t_step ]; then
 	t_step=25
 fi
 
-if [ -z natoms_supercell ]; then
+if [ -z $natoms_supercell ]; then
 	natoms_supercell=1000
 fi
 
-if [ -z reference_structure ]; then
+if [ -z $reference_structure ]; then
 	first_structure=`ls *.res | head -1`
 	reference_structure=${first_structure#*-}
 	reference_structure=${reference_structure%.*}
@@ -56,7 +56,7 @@ ntemp=$(awk "BEGIN {print 1+$max_temp/$t_step; exit}")
 
 # iterate over every single res file present in the directory
 for i in *.res; do
-	seed=`${i%.*}`
+	seed=${i%.*}
 	form_press_name=`echo $i | awk 'BEGIN {FS="-"} {print $1}'`
 	
 	# copy the relevant .eddp to match the complete fileroot of the .res file
@@ -88,7 +88,7 @@ done
 for i in temp_*_K; do
 	cd $i
 
-	cp ~/bin/python_scripts/Caesar/calculate_phonon_pressure.py
+	cp ~/bin/python_scripts/Caesar/calculate_phonon_pressure.py .
 
 	python3 calculate_phonon_pressure.py $reference_structure
 
