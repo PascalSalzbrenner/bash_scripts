@@ -61,6 +61,8 @@ for i in *.res; do
 	
 	# copy the relevant .eddp to match the complete fileroot of the .res file
 	cp ${form_press_name}.eddp ${seed}.eddp
+	
+	cabal res cell < ${seed}.res > ${seed}.cell
 
 	# run wobble - stdout contains nothing but the energies [eV] as a function of temperature
 	wobble -therm -natom $natoms_supercell -unit meV -tmax $max_temp -ntemp $ntemp $seed 1> ${seed}_temperature_energy.dat 2> wobble.log
