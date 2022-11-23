@@ -67,10 +67,13 @@ for i in *.res; do
 	# run wobble - stdout contains nothing but the energies [eV] as a function of temperature
 	wobble -therm -natom $natoms_supercell -unit meV -tmax $max_temp -ntemp $ntemp $seed 1> ${seed}_temperature_energy.dat 2> wobble.log
 	
+	# wobble seems to create this even when -dos is not specified in the command - here, we delete it
+	rm -f ${seed}-dos.agr
+	
 	while read line; do
 
 		temp=`echo $line | awk '{print $1}'`
-		energy=`echo $line | awk '{print $1}'`
+		energy=`echo $line | awk '{print $2}'`
 
 		if [ ! -d temp_${temp}_K ]; then
 			mkdir temp_${temp}_K
