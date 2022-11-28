@@ -78,9 +78,14 @@ for i in *.res; do
 		if [ ! -d temp_${temp}_K ]; then
 			mkdir temp_${temp}_K
 		fi
+		
+		if [ $energy != "-Infinity" ]; then
+		
+			# the energy in wobble becomes infinite when there are (a large number of?) soft modes - we neglect them here as they break the fit
+			# add the vibrational energy to the enthalpy
+			awk -v CONVFMT=%.14g -v awk_energy=$energy '/TITL/ {gsub($5, $5+awk_energy)} 1' $i > temp_${temp}_K/${i}
 
-		# add the vibrational energy to the enthalpy
-		awk -v CONVFMT=%.14g -v awk_energy=$energy '/TITL/ {gsub($5, $5+awk_energy)} 1' $i > temp_${temp}_K/${i}
+		fi
 
 	done < ${seed}_temperature_energy.dat
 	
