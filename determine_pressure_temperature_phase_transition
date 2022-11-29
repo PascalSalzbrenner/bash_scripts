@@ -5,8 +5,9 @@
 # the reference structure can be changed by re-running calculate_phonon_pressure.py
 
 structure=$1
+reference_structure_name=$2 # not used for calculations, purely cosmetic way of naming the output files
 
-echo "#Temperature [K]; Transition pressure [GPa]" > ${structure}_reference_structure_pressure_temperature_phase_transition.dat
+echo "#Temperature [K]; Transition pressure [GPa]" > ${structure}_${reference_structure_name}_pressure_temperature_phase_transition.dat
 
 for i in temp_*; do
 	temperature=${i%_*}
@@ -38,7 +39,7 @@ for i in temp_*; do
 		if (( $(echo "0 >= $sign_number" | bc -l)  )); then
 			# sign has changed
 			transition_pressure=$(awk "BEGIN {print ($pressure+$previous_pressure)/2; exit}")
-			echo $temperature $transition_pressure >> ${structure}_reference_structure_pressure_temperature_phase_transition.dat
+			echo $temperature $transition_pressure >> ${structure}_${reference_structure_name}_pressure_temperature_phase_transition.dat
 			break
 		fi
 
