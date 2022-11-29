@@ -38,7 +38,7 @@ for i in temp_*; do
 		if (( $(echo "0 >= $sign_number" | bc -l)  )); then
 			# sign has changed
 			transition_pressure=$(awk "BEGIN {print ($pressure+$previous_pressure)/2; exit}")
-			echo $transition_pressure $temperature >> ${structure}_reference_structure_pressure_temperature_phase_transition.dat
+			echo $temperature $transition_pressure >> ${structure}_reference_structure_pressure_temperature_phase_transition.dat
 			break
 		fi
 
