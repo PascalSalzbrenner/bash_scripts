@@ -49,3 +49,12 @@ for i in temp_*; do
 	
 	done < ${i}/phonon_pressure_energy_${structure}.dat
 done
+
+echo "set terminal postscript eps colour font 'Helvetica,20'" > ${structure}_${reference_structure_name}_pressure_temperature_phase_transition.gnu 
+echo "set style data points" >> ${structure}_${reference_structure_name}_pressure_temperature_phase_transition.gnu
+echo "set output '| epstopdf --filter --outfile=${structure}_${reference_structure_name}_pressure_temperature_phase_transition.pdf'" >> ${structure}_${reference_structure_name}_pressure_temperature_phase_transition.gnu
+echo "set ylabel 'Transition Pressure [GPa]'" >> ${structure}_${reference_structure_name}_pressure_temperature_phase_transition.gnu
+echo "set xlabel 'Temperature [K]'" >> ${structure}_${reference_structure_name}_pressure_temperature_phase_transition.gnu
+echo "plot '${structure}_${reference_structure_name}_pressure_temperature_phase_transition.dat' u 1:2 pt 7 ps 1.5 lc rgb '#DC143C' notitle" >> ${structure}_${reference_structure_name}_pressure_temperature_phase_transition.gnu
+
+gnuplot ${structure}_${reference_structure_name}_pressure_temperature_phase_transition.gnu
