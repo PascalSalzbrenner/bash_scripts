@@ -13,6 +13,10 @@ for i in temp_*; do
 	temperature=${i%_*}
 	temperature=${temperature#*_}
 	
+	# unset previous_* variables
+	previous_pressure=""
+	previous_energy=""
+	
 	while read line; do
 		
 		# read past title line
@@ -33,8 +37,8 @@ for i in temp_*; do
 		# check if the sign changes - we multiply the previous energy with the current energy; if the result has a negative sign, then the sign will have changed
 		# we take the transition pressure as halfway between the two pressures
 
-		# multiply by 10000 here to prevent underflow errors
-		sign_number=$(awk "BEGIN {print 10000*$energy*$previous_energy; exit}")
+		# multiply by 1000 here to prevent underflow errors
+		sign_number=$(awk "BEGIN {print 1000*$energy*$previous_energy; exit}")
 	
 		if (( $(echo "0 >= $sign_number" | bc -l)  )); then
 			# sign has changed
