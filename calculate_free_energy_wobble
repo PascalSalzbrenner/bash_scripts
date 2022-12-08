@@ -114,3 +114,8 @@ for i in temp_*_K; do
 
 	cd ..
 done
+
+# plot phase diagram
+
+cp ~/bin/python_scripts/pressure_temperature_phase_diagram.py .
+python3 pressure_temperature_phase_diagram.py
