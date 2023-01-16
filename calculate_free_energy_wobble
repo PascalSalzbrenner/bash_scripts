@@ -68,7 +68,7 @@ for i in *.res; do
 	form_press_name=`echo $i | awk 'BEGIN {FS="-"} {print $1}'`
 	
 	# copy the relevant .eddp to match the complete fileroot of the .res file
-	cp ${form_press_name}.eddp ${seed}.eddp
+	cp ../${form_press_name}.eddp ${seed}.eddp
 	
 	cabal res cell < ${seed}.res > ${seed}.cell
 
