@@ -68,7 +68,7 @@ for i in *.res; do
 	form_press_name=`echo $i | awk 'BEGIN {FS="-"} {print $1}'`
 	
 	# copy the relevant .eddp to match the complete fileroot of the .res file
-	cp ../${form_press_name}.eddp ${seed}.eddp
+	awk '{print "../" $0}' ../${form_press_name}.eddp > ${seed}.eddp
 	
 	cabal res cell < ${seed}.res > ${seed}.cell
 
@@ -91,13 +91,13 @@ for i in *.res; do
 		
 			# the energy in wobble becomes infinite when there are (a large number of?) soft modes - we neglect them here as they break the fit
 			# add the vibrational energy to the enthalpy
-			awk -v CONVFMT=%.14g -v awk_energy=$energy '/TITL/ {gsub(/\-[0-9]+\.\S*/, $5+awk_energy)} 1' $i > temp_${temp}_K/${i}
+			awk -v CONVFMT=%.14g -v awk_energy=$energy '/TITL/ {gsub(/\-[0-9][0-9]+\.\S*/, $5+awk_energy)} 1' $i > temp_${temp}_K/${i}
 
 		fi
 
 	done < ${seed}_temperature_energy.dat
 	
-	rm ${seed}.eddp	
+	# rm ${seed}.eddp	
 
 done
 
