@@ -1,0 +1,17 @@
+#!/bin/bash
+# sometimes a CASTEP run prints corrupted output in the middle, but despite this, the end is fine. Here, we keep only the initialisation data and the final configuration, mostly to enable castep2res to work
+
+fileroot=$1
+
+starting_line=`awk '/Starting LBFGS iteration/{print NR}' ${fileroot}.castep | head -1`
+final_line=`awk '/LBFGS: Final Configuration/{print NR}' ${fileroot}.castep`
+num_lines=`cat C-qTP1.castep | wc -l `
+
+head_lines=$((starting_line-2))
+tail_lines=$((num_lines+2-final_line))
+
+cat ${fileroot}.castep | head -${head_lines} > ${fileroot}-temp.castep
+cat ${fileroot}.castep | tail -${tail_lines} >> ${fileroot}-temp.castep
+
+mv ${fileroot}.castep ${fileroot}-old.castep
+mv ${fileroot}-temp.castep ${fileroot}.castep
