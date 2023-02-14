@@ -37,9 +37,9 @@ for spacing in `seq $first_spacing $kpoint_spacing $final_spacing`; do
 
 	if [ $is_soc == "off" ] && [ `python3 -c "print(int(not '$is_non_metallic'))"` -eq 1 ] || [ $is_soc == "on" ]; then
                 # calculation is metallic and not spin-orbit coupled
-                energy=`awk '/Final energy/ {print $5}' ${fileroot}.castep`
+                energy=`awk '/Final energy/ {print $5}' ${fileroot}.castep | tail -1`
         else
-                energy=`awk '/Final energy/ {print $4}' ${fileroot}.castep`
+                energy=`awk '/Final energy/ {print $4}' ${fileroot}.castep | tail -1`
         fi
 	
 	time=`awk '/Total time/ {print $4}' ${fileroot}.castep`

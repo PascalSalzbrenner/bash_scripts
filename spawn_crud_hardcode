@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# a script that somewhat replicates that spawn script in the AIRSS package, but without relying on the .spawn file
+# I'm putting this here mostly so I don't forget how it's done, so this doesn't have any of the nice features of spawn, like selection of nodes, executables, and options
+# can always be changed in the script
+
+workdir=`pwd`
+
+for i in 10 11 12 18; do ssh -x cpu-c-${i} '(cd $workdir; for i in `seq 1 2`; do ( crud.pl -mpinp 14 < /dev/null >& /dev/null &) ; done < /dev/null >& /dev/null &)'; done

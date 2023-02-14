@@ -1,0 +1,40 @@
+#!/bin/bash
+
+# script to calculate the number of core hours used by a set of jobs on slurm
+
+while getopts ":d:j:" opt; do
+        case $opt in
+                d)
+			# the date in the format YYYY-MM-DD from which to analyse jobs
+                        start_date=$OPTARG;;
+                j)
+			# the IDs of the jobs
+                        jobids=("$OPTARG")
+                        until [[ $(eval "echo \${$OPTIND}") =~ ^-.* ]] || [ -z $(eval "echo \${$OPTIND}") ]; do
+                                jobids+=($(eval "echo \${$OPTIND}"))
+                                OPTIND=$((OPTIND + 1))
+                        done;;
+        esac
+done
+
+# check if the input parameters have been supplied
+if [ -z $start_date ] || [ -z $jobids ]; then
+	echo "Usage: calculate_slurm_core_hours -d start_date -j jobid1 jobid2 ..."
+	exit 1
+fi
+
+sacct --format=JobID%20,Jobname%40,State,AllocCPUs,CPUTimeRaw,Flags --starttime $start_date | awk '/COMPLETED/ || /TIMEOUT/ {print}' | awk '$6~/Sched/ {print}' > sacct_raw.txt
+
+for job in ${jobids[@]}; do
+	grep "$job" sacct_raw.txt >> sacct.txt
+done
+
+total_time=0
+
+while read line; do
+	total_time=$(echo $line | awk -v CONVFMT=%.5g "BEGIN {print $total_time+$5/3600; exit}")
+done < sacct.txt
+
+rm sacct*.txt
+
+echo "The total time consumed by these calculations was" $total_time "core hours." > total_time.txt
