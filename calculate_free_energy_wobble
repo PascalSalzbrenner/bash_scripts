@@ -19,7 +19,7 @@ while getopts ":t:s:n:r:m:h" opt; do
 			reference_structure=$OPTARG;;
 		m)
 			# the number of OpenMP threads
-			mpinp=$OPTARG;;
+			ompnp=$OPTARG;;
                 h)
                         echo "Script to calculate the free energy of structures at different temperatures"
                         echo "Usage: calculate_free_energy_wobble [-t max_temp] [-s t_step] [-n natoms_supercell]"
@@ -29,7 +29,7 @@ while getopts ":t:s:n:r:m:h" opt; do
                         echo "-s t_step [K]          : the increment between successive temperatures at which the vibrational energy is evaluated "
                         echo "-n natoms_supercell    : the number of atoms in the supercell used for the phonon calculation"
                         echo "-r reference_structure : the structure against which to reference the final plots - the following part of a res file name: seed-reference_structure.res"
-			echo "-m mpinp               : the number of OpenMP threads used for the wobble calculation. Note that using less threads does not mean more jobs will be started - this is a command line option in case only part of the node is desired."
+			echo "-m ompnp               : the number of OpenMP threads used for the wobble calculation. Note that using less threads does not mean more jobs will be started - this is a command line option in case only part of the node is desired."
                         echo "-h                     : print this message and exit"
                         echo ""
                         echo "If no variables are supplied, the following defaults are used: -t 500 -s 25 -n 1000 -m $(nproc --all). The reference structure is whichever is alphabetically first."
@@ -49,8 +49,8 @@ if [ -z $natoms_supercell ]; then
 	natoms_supercell=1000
 fi
 
-if [ -z $mpinp ]; then
-	mpinp=$(nproc --all)
+if [ -z $ompnp ]; then
+	ompnp=$(nproc --all)
 fi
 
 if [ -z $reference_structure ]; then
@@ -73,7 +73,7 @@ for i in *.res; do
 	cabal res cell < ${seed}.res > ${seed}.cell
 
 	# run wobble - stdout contains nothing but the energies [eV] as a function of temperature
-	wobble -therm -mpinp $mpinp -natom $natoms_supercell -unit meV -tmax $max_temp -ntemp $ntemp $seed 1> ${seed}_temperature_energy.dat 2> wobble.log
+	wobble -therm -ompnp $ompnp -natom $natoms_supercell -unit meV -tmax $max_temp -ntemp $ntemp $seed 1> ${seed}_temperature_energy.dat 2> wobble.log
 	
 	# wobble seems to create this even when -dos is not specified in the command - here, we delete it
 	rm -f ${seed}-dos.agr
