@@ -24,7 +24,7 @@ for i in `seq $min_press $press_step $max_press`; do
 	cd ${i}_GPa
 	
 	for j in `seq 1 $num_simultaneous_jobs`; do
-		airss.pl -pressure $i -devmax 10 -repose -mpinp $mpinp -max $max_samples -pack -workdir /dev/shm -seed ${fileroot} &
+		airss.pl -pressure $i -devmax 5 -repose -mpinp $mpinp -max $max_samples -pack -workdir /dev/shm -seed ${fileroot} &
 	done
 	
 	wait
