@@ -83,17 +83,22 @@ for i in *.res; do
 	cabal res cell < ${seed}.res > ${seed}.cell
 
 	# run wobble - stdout contains nothing but the energies [eV] as a function of temperature
-	wobble -therm -ompnp $ompnp -natom $natoms_supercell -unit meV -tmax $max_temp -ntemp $ntemp $seed 1> ${seed}_temperature_energy.dat 2> wobble.log &
-
-	counter=$((counter+1))
-
-        if [ $counter -eq $num_simultaneous_jobs ]; then
-                wait
-                # all jobs are done; next num_cores jobs can be started
-                counter=0
-        fi
 	
+	if [ ! -f ${seed}_temperature_energy.dat ]; then
+		wobble -therm -ompnp $ompnp -natom $natoms_supercell -unit meV -tmax $max_temp -ntemp $ntemp $seed 1> ${seed}_temperature_energy.dat 2> wobble.log &
+
+		counter=$((counter+1))
+
+        	if [ $counter -eq $num_simultaneous_jobs ]; then
+                	wait
+                	# all jobs are done; next num_cores jobs can be started
+                	counter=0
+        	fi
+	fi
+
 done
+
+wait
 
 for i in *.res; do
 	seed=${i%.*}	
