@@ -160,7 +160,7 @@ for sn in ${struc_name[@]}; do
 			form_press_name=`echo $seed | awk 'BEGIN {FS="-"} {print $1}'`   # this should be of the form GaH_100p0
 			if [ ! -f ${form_press_name}.eddp ]; then
 				form_name=${form_press_name%_*}
-				cp ${form_name}.eddp ${form_press_name}.eddp
+				awk '{print "../" $0}' ../${form_name}.eddp > ${form_press_name}.eddp
 			fi
 
 			dev=`res2dev $seed | awk '{print $2}'`
