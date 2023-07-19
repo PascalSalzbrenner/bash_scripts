@@ -14,7 +14,7 @@ if [ ! -f ${struc_name}_dft_${eddp_calc}_enthalpies.dat ]; then
 	echo "Pressure [GPa]; DFT energy [eV]; EDDP energy [eV]" > ${struc_name}_dft_${eddp_calc}_enthalpies.dat
 fi
 
-for press in `seq $min_press $max_press $press_step`; do
+for press in `seq $min_press $press_step $max_press`; do
 	dft_energy=`awk '/TITL/ {print $5}' DFT/good_castep/${seed}_${press}p0-${struc_name_res}.res`
 	eddp_energy=`awk '/TITL/ {print $5}' ${eddp_calc}/good_castep/${seed}_${press}p0-${struc_name_res}.res`
 	echo $press $dft_energy $eddp_energy >> ${struc_name}_dft_${eddp_calc}_enthalpies.dat
