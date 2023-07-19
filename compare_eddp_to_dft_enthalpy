@@ -7,7 +7,7 @@ eddp_calc=$4
 struc_name=$5 # eg for Po_${press}p0-HCP.res, we need Po-HCP
 
 # determine structure name parts
-seed=${struc_name%%_*}
+seed=${struc_name%%-*}
 struc_name_rest=${struc_name#*-}
 
 if [ ! -f ${struc_name}_dft_${eddp_calc}_enthalpies.dat ]; then
