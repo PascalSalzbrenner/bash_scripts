@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# run in directory containing input files for a Wobble run
+
+# auto-determine fileroot
+name=`ls *.cell`
+fileroot=${name%.*}
+
+ncores=`nproc --all`
+
+if [ ! -f threads_time.txt ]; then
+	echo "# Number of threads; Total time [s]; Total time per thread [s]" >> threads_time.txt
+fi
+
+for num_threads in `seq 1 $ncores`; do
+	
+	mkdir num_threads_${num_threads}
+	cp -r ${fileroot}* num_threads_${num_threads}
+	
+	cd num_threads_${num_threads} 
+	
+	total_time=`wobble -mpinp $num_threads -therm -disp -dos $fileroot 2>&1 | awk '/total/ {print $3}'`
+	
+	time_per_thread=`python3 -c "print(float('$total_time')/float('$num_threads'))"`
+
+	echo $num_threads $total_time $time_per_thread >> ../threads_time.txt
+
+	cd ..
+done

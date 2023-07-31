@@ -1,0 +1,64 @@
+#!/bin/bash
+
+# script to determine, for a set of temperatures, the pressure at which a phase transition between a given structure and the reference structure
+# requires the output of a calculate_free_energy_wobble run
+# the reference structure can be changed by re-running calculate_phonon_pressure.py
+
+structure=$1
+reference_structure_name=$2 # not used for calculations, purely cosmetic way of naming the output files
+
+echo "#Temperature [K]; Transition pressure [GPa]" > ${structure}_${reference_structure_name}_pressure_temperature_phase_transition.dat
+
+for i in temp_*; do
+	temperature=${i%_*}
+	temperature=${temperature#*_}
+	
+	# unset previous_* variables
+	previous_pressure=""
+	previous_energy=""
+	
+	while read line; do
+		
+		# read past title line
+		if echo $line | grep -q "#"; then
+			continue
+		fi
+		
+		pressure=`echo $line | awk '{print $1}'`
+		energy=`echo $line | awk '{print $2}'`
+
+		# to determine whether the phase transition has taken place, we check if the sign of the energy changes - the first step, we have nothing to compare to, so we proceed immediately to the second step
+		if [ -z $previous_pressure ]; then
+			previous_pressure=$pressure
+			previous_energy=$energy
+			continue
+		fi
+		
+		# check if the sign changes - we multiply the previous energy with the current energy; if the result has a negative sign, then the sign will have changed
+		# we take the transition pressure as halfway between the two pressures
+
+		# multiply by 1000 here to prevent underflow errors
+		sign_number=$(awk "BEGIN {print 1000*$energy*$previous_energy; exit}")
+	
+		if (( $(echo "0 >= $sign_number" | bc -l)  )); then
+			# sign has changed
+			transition_pressure=$(awk "BEGIN {print ($pressure+$previous_pressure)/2; exit}")
+			echo $temperature $transition_pressure >> ${structure}_${reference_structure_name}_pressure_temperature_phase_transition.dat
+			break
+		fi
+
+		previous_pressure=$pressure
+		previous_energy=$energy
+
+	
+	done < ${i}/phonon_pressure_energy_${structure}.dat
+done
+
+echo "set terminal postscript eps colour font 'Helvetica,20'" > ${structure}_${reference_structure_name}_pressure_temperature_phase_transition.gnu 
+echo "set style data points" >> ${structure}_${reference_structure_name}_pressure_temperature_phase_transition.gnu
+echo "set output '| epstopdf --filter --outfile=${structure}_${reference_structure_name}_pressure_temperature_phase_transition.pdf'" >> ${structure}_${reference_structure_name}_pressure_temperature_phase_transition.gnu
+echo "set ylabel 'Transition Pressure [GPa]'" >> ${structure}_${reference_structure_name}_pressure_temperature_phase_transition.gnu
+echo "set xlabel 'Temperature [K]'" >> ${structure}_${reference_structure_name}_pressure_temperature_phase_transition.gnu
+echo "plot '${structure}_${reference_structure_name}_pressure_temperature_phase_transition.dat' u 1:2 pt 7 ps 1.5 lc rgb '#DC143C' notitle" >> ${structure}_${reference_structure_name}_pressure_temperature_phase_transition.gnu
+
+gnuplot ${structure}_${reference_structure_name}_pressure_temperature_phase_transition.gnu
