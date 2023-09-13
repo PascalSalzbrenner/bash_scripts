@@ -1,0 +1,84 @@
+#!/bin/bash
+
+# script to extract the free energies of a set of Caesar phonon calculations at a set of temperatures and store them in .txt file
+
+while getopts ":d:m:s:t:h" opt; do
+        case $opt in
+                d)
+			# the list of directories in which the different Caesar calculations are stored
+                        directories=$OPTARG;;
+		m)
+			# the minimum temperature
+			t_min=$OPTARG;;
+                s)
+			# step between temperatures
+                        t_step=$OPTARG;;
+                t)
+			# the maximum temperature
+			t_max=$OPTARG;;
+                h)
+                        echo "Script to extract the free energy of different Caesar calculations at a set of temperatures"
+                        echo "Usage: calculate_free_energy_wobble -d 'directory_1 directory_2 directory_3 ...'  [-m t_min] [-s t_step] [-t t_max]"
+                        echo ""
+			echo "Required arguments"
+			echo "-d 'directory_1 directory_2 directory_3 ...' : list of directories in which the different Caesar calculations are stored"
+			echo ""
+                        echo "Optional arguments"
+			echo "-m t_min [K]           : the lowest temperature at which the vibrational energy is extracted"
+                        echo "-s t_step [K]          : the increment between successive temperatures at which the vibrational energy is evaluated"
+                        echo "-t max_temp [K]        : the highest temperature at which the vibrational energy is extracted"
+                        echo "-h                     : print this message and exit"
+                        echo ""
+                        echo "A list of directories MUST be supplied. For the temperatures, the following defaults apply: -m 0 -s 500 -t 2000."
+                        exit 1
+        esac
+done
+
+if [ -z "$directories" ]; then
+	echo "You have not supplied a list of directories, but such a list MUST be given."
+	exit 1
+fi
+
+if [ -z $t_min ]; then
+        t_min=0
+fi
+
+if [ -z $t_step ]; then
+	t_step=500
+fi
+
+if [ -z $t_max ]; then
+	t_max=2000
+fi
+
+if [ ! -f free_energies.dat ]; then 
+	echo "               Energy [eV]" > free_energies.dat
+fi
+
+# set up list of all temperatures for writing to file
+temperatures_list="T [K]"
+
+for i in `seq $t_min $t_step $t_max`; do
+	temperatures_list+=" $i"
+done
+
+echo $temperatures_list >> free_energies.dat
+
+for directory in $directories; do
+
+	# set up energies list for writing to file
+	energies_list="$directory"
+
+	for i in `seq $t_min $t_step $t_max`; do
+		energy=`grep "^   $i\." ${directory}/lte/interpolated_free_energy.dat | awk '{print $3}'`
+		energies_list+=" $energy"
+	done
+
+	echo $energies_list >> free_energies.dat
+
+done
+
+echo "" >> free_energies.dat
+
+
+
