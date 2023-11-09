@@ -13,7 +13,7 @@ struc_name_rest=${struc_name#*-}
 # in principle, it should be possible to supply an eddp_calc which does not contain good_castep in the top-level directory. This does cause problems with the output filename, so we choose only the name of the top-level directory
 
 if [ ! -f ${struc_name}_dft_${eddp_calc}_enthalpies.dat ]; then
-	echo "Pressure [GPa]; DFT energy [eV/atom]; EDDP energy [eV/atom]; DFT energy - EDDP energy [eV/atom]" > ${struc_name}_dft_${eddp_calc%%/*}_enthalpies.dat
+	echo "Pressure [GPa]; DFT enthalpy [eV/atom]; EDDP enthalpy [eV/atom]; DFT enthalpy - EDDP enthalpy [eV/atom]" > ${struc_name}_dft_${eddp_calc%%/*}_enthalpies.dat
 fi
 
 for press in `seq $min_press $press_step $max_press`; do
@@ -33,5 +33,5 @@ for press in `seq $min_press $press_step $max_press`; do
 	eddp_energy_per_atom=`awk "BEGIN {print $eddp_energy/$eddp_natoms; exit}"`
 
 	energy_difference=`awk "BEGIN {print $dft_energy_per_atom - $eddp_energy_per_atom; exit}"`
-	echo $press $dft_energy_atom $eddp_energy_per_atom $energy_difference >> ${struc_name}_dft_${eddp_calc%%/*}_enthalpies.dat
+	echo $press $dft_energy_per_atom $eddp_energy_per_atom $energy_difference >> ${struc_name}_dft_${eddp_calc%%/*}_enthalpies.dat
 done
