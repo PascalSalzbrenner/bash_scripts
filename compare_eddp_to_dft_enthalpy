@@ -13,11 +13,25 @@ struc_name_rest=${struc_name#*-}
 # in principle, it should be possible to supply an eddp_calc which does not contain good_castep in the top-level directory. This does cause problems with the output filename, so we choose only the name of the top-level directory
 
 if [ ! -f ${struc_name}_dft_${eddp_calc}_enthalpies.dat ]; then
-	echo "Pressure [GPa]; DFT energy [eV]; EDDP energy [eV]" > ${struc_name}_dft_${eddp_calc%%/*}_enthalpies.dat
+	echo "Pressure [GPa]; DFT energy [eV/atom]; EDDP energy [eV/atom]; DFT energy - EDDP energy [eV/atom]" > ${struc_name}_dft_${eddp_calc%%/*}_enthalpies.dat
 fi
 
 for press in `seq $min_press $press_step $max_press`; do
+
+	# calculate DFT energy per atom
 	dft_energy=`awk '/TITL/ { printf ("%f", $5 ); }' DFT/good_castep/${seed}_${press}p0-${struc_name_rest}.res`
+	dft_sfac_line=`awk '/SFAC/{print NR}' DFT/good_castep/${seed}_${press}p0-${struc_name_rest}.res`
+	dft_end_line=`awk '/END/{print NR}' DFT/good_castep/${seed}_${press}p0-${struc_name_rest}.res`
+	dft_natoms=$((dft_end_line - dft_sfac_line - 1))
+	dft_energy_per_atom=`awk "BEGIN {print $dft_energy/$dft_natoms; exit}"`
+
+	# calculate EDDP energy per atom
 	eddp_energy=`awk '/TITL/ { printf ("%f", $5 ); }' ${eddp_calc}/good_castep/${seed}_${press}p0-${struc_name_rest}.res`
-	echo $press $dft_energy $eddp_energy >> ${struc_name}_dft_${eddp_calc%%/*}_enthalpies.dat
+	eddp_sfac_line=`awk '/SFAC/{print NR}' ${eddp_calc}/good_castep/${seed}_${press}p0-${struc_name_rest}.res`
+	eddp_end_line=`awk '/END/{print NR}' ${eddp_calc}/good_castep/${seed}_${press}p0-${struc_name_rest}.res`
+	eddp_natoms=$((eddp_end_line - eddp_sfac_line - 1))
+	eddp_energy_per_atom=`awk "BEGIN {print $eddp_energy/$eddp_natoms; exit}"`
+
+	energy_difference=`awk "BEGIN {print $dft_energy_per_atom - $eddp_energy_per_atom; exit}"`
+	echo $press $dft_energy_atom $eddp_energy_per_atom $energy_difference >> ${struc_name}_dft_${eddp_calc%%/*}_enthalpies.dat
 done
