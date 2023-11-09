@@ -23,14 +23,14 @@ for press in `seq $min_press $press_step $max_press`; do
 	dft_sfac_line=`awk '/SFAC/{print NR}' DFT/good_castep/${seed}_${press}p0-${struc_name_rest}.res`
 	dft_end_line=`awk '/END/{print NR}' DFT/good_castep/${seed}_${press}p0-${struc_name_rest}.res`
 	dft_natoms=$((dft_end_line - dft_sfac_line - 1))
-	dft_energy_per_atom=`awk "BEGIN {print $dft_energy/$dft_natoms; exit}"`
+	dft_energy_per_atom=`awk -v awk_energy=$dft_energy -v awk_natoms=$dft_natoms 'BEGIN {printf ("%f", awk_energy/awk_natoms); exit}'`
 
 	# calculate EDDP energy per atom
 	eddp_energy=`awk '/TITL/ { printf ("%f", $5 ); }' ${eddp_calc}/good_castep/${seed}_${press}p0-${struc_name_rest}.res`
 	eddp_sfac_line=`awk '/SFAC/{print NR}' ${eddp_calc}/good_castep/${seed}_${press}p0-${struc_name_rest}.res`
 	eddp_end_line=`awk '/END/{print NR}' ${eddp_calc}/good_castep/${seed}_${press}p0-${struc_name_rest}.res`
 	eddp_natoms=$((eddp_end_line - eddp_sfac_line - 1))
-	eddp_energy_per_atom=`awk "BEGIN {print $eddp_energy/$eddp_natoms; exit}"`
+	eddp_energy_per_atom=`awk -v awk_energy=$eddp_energy -v awk_natoms=$eddp_natoms 'BEGIN {printf ("%f", awk_energy/awk_natoms); exit}'`
 
 	energy_difference=`awk "BEGIN {print $dft_energy_per_atom - $eddp_energy_per_atom; exit}"`
 	echo $press $dft_energy_per_atom $eddp_energy_per_atom $energy_difference >> ${struc_name}_dft_${eddp_calc%%/*}_enthalpies.dat
