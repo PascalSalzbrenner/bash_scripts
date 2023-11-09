@@ -10,12 +10,14 @@ struc_name=$5 # eg for Po_${press}p0-HCP.res, we need Po-HCP
 seed=${struc_name%%-*}
 struc_name_rest=${struc_name#*-}
 
+# in principle, it should be possible to supply an eddp_calc which does not contain good_castep in the top-level directory. This does cause problems with the output filename, so we choose only the name of the top-level directory
+
 if [ ! -f ${struc_name}_dft_${eddp_calc}_enthalpies.dat ]; then
-	echo "Pressure [GPa]; DFT energy [eV]; EDDP energy [eV]" > ${struc_name}_dft_${eddp_calc}_enthalpies.dat
+	echo "Pressure [GPa]; DFT energy [eV]; EDDP energy [eV]" > ${struc_name}_dft_${eddp_calc%%/*}_enthalpies.dat
 fi
 
 for press in `seq $min_press $press_step $max_press`; do
-	dft_energy=`awk '/TITL/ {print $5}' DFT/good_castep/${seed}_${press}p0-${struc_name_rest}.res`
-	eddp_energy=`awk '/TITL/ {print $5}' ${eddp_calc}/good_castep/${seed}_${press}p0-${struc_name_rest}.res`
-	echo $press $dft_energy $eddp_energy >> ${struc_name}_dft_${eddp_calc}_enthalpies.dat
+	dft_energy=`awk '/TITL/ { printf ("%f", $5 ); }' DFT/good_castep/${seed}_${press}p0-${struc_name_rest}.res`
+	eddp_energy=`awk '/TITL/ { printf ("%f", $5 ); }' ${eddp_calc}/good_castep/${seed}_${press}p0-${struc_name_rest}.res`
+	echo $press $dft_energy $eddp_energy >> ${struc_name}_dft_${eddp_calc%%/*}_enthalpies.dat
 done
