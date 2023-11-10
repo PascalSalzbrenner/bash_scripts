@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# script to keep only the first n (user-specified) entries of a data.res file
+
+num_resfiles=$1
+
+# line in which the n+1st resfile begins 
+final_line=`awk -v n=$((num_resfiles+1)) '/TITL/ { count++ } count == n { print NR; exit }' data.res`
+
+# the final line we keep is the one before the one we have found
+final_line=$((final_line-1))
+
+cat data.res | head -$final_line > data_new.res
+
+mv data_new.res data.res
