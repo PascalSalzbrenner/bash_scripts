@@ -27,7 +27,7 @@ while getopts ":n:m:s:t:h" opt; do
 			p_max=$OPTARG;;
                 h)
                         echo "Script to extract the vibrational energy as a function of temperature calculated by wobble at a set of pressures"
-                        echo "Usage: extract_caesar_vibrational_energies -n filename [-m t_min] [-s t_step] [-t t_max] [-l p_min] [-i p_step] [-p p_max]"
+                        echo "Usage: extract_wobble_vibrational_energies -n filename [-m t_min] [-s t_step] [-t t_max] [-l p_min] [-i p_step] [-p p_max]"
                         echo ""
 			echo "Required arguments"
 			echo "-n filename            : the actual filenames will be of the form, eg Po_<press>p0-Pm-3m.dat. The pressure component is added to the name by this script, hence this argument must be Po-Pm-3m.dat (for instance)"
