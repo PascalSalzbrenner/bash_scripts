@@ -2,7 +2,7 @@
 
 # script to extract the free energies of a set of wobble phonon calculations at a set of pressures over a range temperatures and store them in .txt file
 
-while getopts ":n:m:s:t:h" opt; do
+while getopts ":n:m:s:t:l:i:p:h" opt; do
         case $opt in
                 n)
 			# the name of the file containing the vibrational energy without the pressure component - eg if we want the vibrational energies from Po_<press>p0-Pm-3m.dat, this must be Po-Pm-3m.dat
@@ -52,7 +52,8 @@ if [ -z $filename ]; then
 fi
 
 # split up filename
-fileroot=${filename%%-*}
+fileroot=${filename%.*}
+fileseed=${filename%%-*}
 filename_rest=${filename#*-}
 
 if [ -z $t_min ]; then
@@ -79,8 +80,8 @@ if [ -z $p_max ]; then
 	p_max=100
 fi
 
-if [ ! -f vibrational_energies_${filename}.dat ]; then 
-	echo "               Energy [eV]" > vibrational_energies_${filename}.dat
+if [ ! -f vibrational_energies_${fileroot}.dat ]; then 
+	echo "               Energy [eV]" > vibrational_energies_${fileroot}.dat
 fi
 
 # set up list of all temperatures for writing to file
@@ -90,7 +91,7 @@ for i in `seq $t_min $t_step $t_max`; do
 	temperatures_list+=" $i"
 done
 
-echo $temperatures_list >> vibrational_energies_${filename}.dat
+echo $temperatures_list >> vibrational_energies_${fileroot}.dat
 
 for press in `seq $p_min $p_step $p_max`; do
 
@@ -98,15 +99,15 @@ for press in `seq $p_min $p_step $p_max`; do
 	energies_list="$press"
 
 	# set up full file name
-	press_filename=${fileroot}_${press}p0-${filename_rest}
+	press_filename=${fileseed}_${press}p0-${filename_rest}
 
 	for i in `seq $t_min $t_step $t_max`; do
 		energy=`grep "^ *$i\." $press_filename | awk '{print $2}'`
 		energies_list+=" $energy"
 	done
 
-	echo $energies_list >> vibrational_energies_${filename}.dat
+	echo $energies_list >> vibrational_energies_${fileroot}.dat
 
 done
 
-echo "" >> vibrational_energies_${filename}.dat
+echo "" >> vibrational_energies_${fileroot}.dat
