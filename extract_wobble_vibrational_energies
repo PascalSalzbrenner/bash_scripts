@@ -81,11 +81,11 @@ if [ -z $p_max ]; then
 fi
 
 if [ ! -f vibrational_energies_${fileroot}.dat ]; then 
-	echo "               Energy [eV]" > vibrational_energies_${fileroot}.dat
+	echo "#               Energy [eV]" > vibrational_energies_${fileroot}.dat
 fi
 
 # set up list of all temperatures for writing to file
-temperatures_list="P [GPa] | T [K]"
+temperatures_list="# P [GPa] | T [K]"
 
 for i in `seq $t_min $t_step $t_max`; do
 	temperatures_list+=" $i"
