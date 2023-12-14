@@ -25,7 +25,7 @@ while getopts ":d:m:s:t:h" opt; do
 			echo ""
                         echo "Optional arguments"
 			echo "-m t_min [K]           : the lowest temperature at which the vibrational energy is extracted"
-                        echo "-s t_step [K]          : the increment between successive temperatures at which the vibrational energy is evaluated"
+                        echo "-s t_step [K]          : the increment between successive temperatures at which the vibrational energy is extracted"
                         echo "-t t_max [K]           : the highest temperature at which the vibrational energy is extracted"
                         echo "-h                     : print this message and exit"
                         echo ""
