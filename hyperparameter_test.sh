@@ -4,9 +4,10 @@
 
 r_min=$1 # minimum rcut
 r_max=$2 # maximum rcut
-p_min=$3 # minimum number of polynomials
-p_max=$4 # maximum number of polynomials
-chain_command_line=$5 # chain parameters other than rcut and polynomials
+r_step=$3 # rcut increment
+p_min=$4 # minimum number of polynomials
+p_max=$5 # maximum number of polynomials
+chain_command_line=$6 # chain parameters other than rcut and polynomials
 
 if [ ! -f hyperparameter_test.dat ]; then
 	echo "# -r [Ang]; -P; Attempt number; RMSE [meV/atom]; MAE [meV/atom]" > hyperparameter_test.dat
@@ -16,7 +17,7 @@ if [ ! -f hyperparameter_test_average.dat ]; then
         echo "# -r [Ang]; -P; RMSE [meV/atom]; MAE [meV/atom]" > hyperparameter_test_average.dat
 fi
 
-for rcut in `seq $r_min $r_max`; do
+for rcut in `seq $r_min $r_step $r_max`; do
 	for p in `seq $p_min $p_max`; do
 		for i in `seq 1 3`; do
 
