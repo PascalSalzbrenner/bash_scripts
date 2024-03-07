@@ -111,27 +111,25 @@ for i in *.res; do
 
 	# wobble seems to create this even when -dos is not specified in the command - here, we delete it
 	rm -f ${seed}-dos.agr
-	
-	while read line; do
 
-		temp=`echo $line | awk '{print $1}'`
-		energy=`echo $line | awk '{print $2}'`
+	# we ignore structures with soft modes, ie those which are dynamically unstable
+	# the fits will work fine, but may be extrapolating in certain regions
+	# we can check which files have soft modes by looking at the warning.dat file	
+	if grep -q "Infinity" ${seed}_temperature_energy.dat; then
+		echo "Soft modes in" $i >> warning.dat
+	else
 
-		if [ ! -d temp_${temp}_K ]; then
-			mkdir temp_${temp}_K
-		fi
-		
-		if [ $energy != "-Infinity" ]; then
-		
-			# the energy in wobble becomes infinite when there are (a large number of?) soft modes - we neglect them here as they break the fit
-			# add the vibrational energy to the enthalpy
-			awk -v CONVFMT=%.14g -v awk_energy=$energy '/TITL/ {gsub(/\-[1-9]+[0-9]*\.\S*/, $5+awk_energy)} 1' $i > temp_${temp}_K/${i}
+		while read line; do
+        	
+			temp=`echo $line | awk '{print $1}'`
+			energy=`echo $line | awk '{print $2}'`
+        	
+			if [ ! -d temp_${temp}_K ]; then
+				mkdir temp_${temp}_K
+			fi
 
-		fi
-
-	done < ${seed}_temperature_energy.dat
-	
-	# rm ${seed}.eddp	
+		done < ${seed}_temperature_energy.dat
+	fi	
 
 done
 
