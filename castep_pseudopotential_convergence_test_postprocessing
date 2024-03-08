@@ -11,7 +11,7 @@ bohr_to_angstrom=0.529177249
 
 # auto-determine fileroot
 name=`ls *.param`
-fileroot=`python3 -c "print('$name'.split('.')[0])"`
+fileroot=${name%.param}
 
 echo "Which task would you like to carry out? (currently supported: bond_length, relative_enthalpy)"
 read task

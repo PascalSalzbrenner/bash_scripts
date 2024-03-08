@@ -2,8 +2,7 @@
 
 # determine file root
 name=`ls *.param`
-
-fileroot=`python3 -c "print('$name'.split('.')[0])"`
+fileroot=${name%.param}
 
 for file in *; do
 

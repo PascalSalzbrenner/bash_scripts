@@ -11,7 +11,7 @@ ncores=`nproc --all`
 
 # auto-determine fileroot
 name=`ls *.param`
-fileroot=`python3 -c "print('$name'.split('.')[0])"`
+fileroot=${name%.param}
 
 if [ ! -f kpoints_mp_spacing.txt ]; then
         echo "K-point grid density [1/Ang]; Total calculated energy per atom [eV]; Time [s]" >> kpoints_mp_spacing.txt

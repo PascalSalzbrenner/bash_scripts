@@ -8,7 +8,7 @@ kpoint_spacing=$3
 
 # auto-determine fileroot
 name=`ls *.param`
-fileroot=`python3 -c "print('$name'.split('.')[0])"`
+fileroot=${name%.param}
 ncores=`nproc --all`
 
 if [ ! -f vacuum_spacing.txt ]; then

@@ -35,12 +35,12 @@ fi
 # auto-determine fileroots
 cd ${first_structure}
 name=`ls *.param`
-first_fileroot=`python3 -c "print('$name'.split('.')[0])"`
+first_fileroot=${name%.param}
 cd $workdir
 
 cd ${second_structure}
 name=`ls *.param`
-second_fileroot=`python3 -c "print('$name'.split('.')[0])"`
+second_fileroot=${name%.param}
 cd $workdir
 
 # loop over lines 

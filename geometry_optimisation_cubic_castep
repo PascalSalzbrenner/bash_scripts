@@ -8,7 +8,7 @@ step=$3 #by how much the lattice parameter is incremented
 
 # auto-determine fileroot
 name=`ls *.param`
-fileroot=`python3 -c "print('$name'.split('.')[0])"`
+fileroot=${name%.param}
 
 ncores=`nproc --all`
 
