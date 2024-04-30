@@ -11,8 +11,6 @@ energy_step=$3
 first_x=$4
 second_x=$5
 
-ncores=`nproc --all`
-
 ha_to_ev=27.211396132
 
 # determine the displaced x-component
@@ -43,7 +41,7 @@ for cutoff in `seq $first_energy $energy_step $final_energy`; do
 	
 	cd first_structure
 
-	mpirun -np $ncores cp2k.popt -o ${fileroot}.out ${fileroot}.inp
+	mpirun -np $NCORES cp2k.popt -o ${fileroot}.out ${fileroot}.inp
 	
 	first_energy=`grep "ENERGY" ${fileroot}.out | tail -1 | awk '{print $9}'`
 	first_time=`grep "CP2K" ${fileroot}.out | tail -1 | awk '{print $6}'`
@@ -64,7 +62,7 @@ for cutoff in `seq $first_energy $energy_step $final_energy`; do
 	
 	cd second_structure
 
-	mpirun -np $ncores cp2k.popt -o ${fileroot}.out ${fileroot}.inp
+	mpirun -np $NCORES cp2k.popt -o ${fileroot}.out ${fileroot}.inp
 	
 	second_energy=`grep "ENERGY" ${fileroot}.out | tail -1 | awk '{print $9}'`
 	second_time=`grep "CP2K" ${fileroot}.out | tail -1 | awk '{print $6}'`

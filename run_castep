@@ -1,9 +1,7 @@
 #!/bin/bash
 
-ncores=`nproc --all`
-
 # auto-determine fileroot
 name=`ls *.param`
 fileroot=${name%.param}
 
-nohup mpirun -n $ncores castep.mpi $fileroot &
+nohup mpirun -n $NCORES castep.mpi $fileroot &

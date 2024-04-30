@@ -10,8 +10,6 @@ energy_step=$3
 name=`ls *.inpt`
 fileroot=`python3 -c "print('$name'.split('.')[0])"`
 
-ncores=`nproc --all`
-
 if [ ! -f ecut.txt ]; then
 	echo "Cutoff Energy [eV]; Total calculated energy per atom [eV]; Time [s]" >> ecut.txt
 fi
@@ -35,7 +33,7 @@ for cutoff in `seq $first_energy $energy_step $final_energy`; do
 
 	counter=$((counter+1))
 
-	if [ $counter -eq $ncores ]; then
+	if [ $counter -eq $NCORES ]; then
 		wait
 		# all jobs are done; next num_cores jobs can be started
 		counter=0

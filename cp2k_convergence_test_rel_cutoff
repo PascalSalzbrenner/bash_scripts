@@ -14,8 +14,6 @@ fileroot=`python3 -c "print('$name'.split('.')[0])"`
 # determine number of grids
 num_grids=`awk '/NGRIDS/ {print $2}' ${fileroot}.inp`
 
-ncores=`nproc --all`
-
 ha_to_ev=27.211396132
 
 if [ ! -f rel_cutoff.txt ]; then
@@ -38,7 +36,7 @@ for cutoff in `seq $first_energy $energy_step $final_energy`; do
 	
 	cd rel_cutoff_${cutoff}
 
-	mpirun -np $ncores cp2k.popt -o ${fileroot}.out ${fileroot}.inp
+	mpirun -np $NCORES cp2k.popt -o ${fileroot}.out ${fileroot}.inp
 	
 	energy=`grep "ENERGY" ${fileroot}.out | tail -1 | awk '{print $9}'`
 

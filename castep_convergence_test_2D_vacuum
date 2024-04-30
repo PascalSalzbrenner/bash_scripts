@@ -9,8 +9,6 @@ kpoint_spacing=$3
 # auto-determine fileroot
 name=`ls *.param`
 fileroot=${name%.param}
-ncores=`nproc --all`
-
 if [ ! -f vacuum_spacing.txt ]; then
         echo "vacuum spacing [Ang]; Total calculated energy per atom [eV]; Time [s]" >> vacuum_spacing.txt
 fi
@@ -26,7 +24,7 @@ for spacing in `seq $first_spacing $kpoint_spacing $final_spacing`; do
 	
 	sed -i "s/AAA/${spacing}/gi" ${fileroot}.cell
 
-	mpirun -n $ncores castep.mpi $fileroot
+	mpirun -n $NCORES castep.mpi $fileroot
 
 	# the output format for the energy is different between SOC and not SOC calculations, so here we determine which it is
 	is_soc=`awk '/spin-orbit coupling/ {print $4}' ${fileroot}.castep`

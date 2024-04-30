@@ -6,8 +6,6 @@ first_kpoint=$1
 final_kpoint=$2
 kpoint_step=$3
 
-ncores=`nproc --all`
-
 ry_to_ev=13.605698066
 
 if [ ! -f k_points.txt ]; then
@@ -24,7 +22,7 @@ for kpoint in `seq $first_kpoint $kpoint_step $final_kpoint`; do
 	
 	cd ${kpoint}_k_points 
 
-	mpirun -np $ncores pw.x -i pw.in > pw.out
+	mpirun -np $NCORES pw.x -i pw.in > pw.out
 
 	energy=`awk '/total energy/ {print $5}' pw.out | tail -2 | head -1`
 

@@ -1,7 +1,5 @@
 #!/bin/bash
 
-ncores=`nproc --all`
-
 first_split=$1
 last_split=$2
 

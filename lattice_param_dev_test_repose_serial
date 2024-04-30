@@ -8,8 +8,6 @@ step=$3 #by how much the lattice parameter is incremented
 name=`ls *.eddp`
 fileroot=${name%.*}
 
-ncores=`nproc --all`
-
 if [ ! -f dev.txt ]; then
         echo "# Lattice Parameter [A]; Volume [A^3]; Deviation [eV]" > dev.txt 
 fi

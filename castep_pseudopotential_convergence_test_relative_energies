@@ -12,8 +12,6 @@ second_structure=$2
 first_structure_name=`python3 -c "print('$first_structure'.rstrip('/').split('/')[-1])"`
 second_structure_name=`python3 -c "print('$second_structure'.rstrip('/').split('/')[-1])"`
 
-ncores=`nproc --all`
-
 # the radius in the pseudopotential string is given in Bohr - conversion factor to Angstrom used for output
 bohr_to_angstrom=0.529177249
 
@@ -91,7 +89,7 @@ while read -r line; do
         	echo "calculate_stress        True" >> ${first_fileroot}.param
         	echo "geom_stress_tol         0.001 GPa" >> ${first_fileroot}.param
 
-		mpirun -n $ncores castep.mpi $first_fileroot </dev/null # redirect input in order for this to not mess with the file reading
+		mpirun -n $NCORES castep.mpi $first_fileroot </dev/null # redirect input in order for this to not mess with the file reading
 
         	rm ${first_fileroot}.check ${first_fileroot}.bands ${first_fileroot}.castep_bin
 
@@ -131,7 +129,7 @@ while read -r line; do
                 echo "calculate_stress        True" >> ${second_fileroot}.param
                 echo "geom_stress_tol         0.001 GPa" >> ${second_fileroot}.param
 
-                mpirun -n $ncores castep.mpi $second_fileroot </dev/null # redirect input in order for this to not mess with the file reading
+                mpirun -n $NCORES castep.mpi $second_fileroot </dev/null # redirect input in order for this to not mess with the file reading
 
                 rm ${second_fileroot}.check ${second_fileroot}.bands ${second_fileroot}.castep_bin
 
