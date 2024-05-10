@@ -1,14 +1,12 @@
 #!/bin/bash
 
-ncores=`nproc --all`
-
 for d in */; do
 	cd $d
 	if [ ! -f "OUTCAR" ]; then
 		if [ `awk '{FS = "="} /LSORBIT/ {print $2}' INCAR` == ".TRUE." ]; then
-			mpirun -np $ncores vasp_6.1_ncl
+			mpirun -np $NCORES vasp_6.1_ncl
 		else
-			mpirun -np $ncores vasp_6.1_std 
+			mpirun -np $NCORES vasp_6.1_std 
 		fi
 
 		run_successful=`grep "General" OUTCAR` # when VASP completes a job successfully, it prints some "General timing and accounting informations for this job" at the very end of OUTCAR. Thus, if the job terminates prematurely, run_successful will be empty
@@ -18,9 +16,9 @@ for d in */; do
                         delete_vasp_output
 
                         if [ `awk '{FS = "="} /LSORBIT/ {print $2}' INCAR` == ".TRUE." ]; then
-                                mpirun -np $ncores vasp_6.1_ncl
+                                mpirun -np $NCORES vasp_6.1_ncl
                         else
-                                mpirun -np $ncores vasp_6.1_std
+                                mpirun -np $NCORES vasp_6.1_std
                         fi
 
                         run_successful=`grep "General" OUTCAR`

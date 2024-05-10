@@ -1,7 +1,5 @@
 #!/bin/bash
 
-ncores=`nproc --all`
-
 for d in */; do
 	cd $d
 	if [ ! -f "OUTCAR" ]; then

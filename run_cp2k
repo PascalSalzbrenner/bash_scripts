@@ -1,8 +1,6 @@
 #!/bin/bash
 
-ncores=`nproc --all`
-
 # determine filename
 name=`ls *.inp`
 
-nohup mpirun -np $ncores cp2k.popt $name &
+nohup mpirun -np $NCORES cp2k.popt $name &

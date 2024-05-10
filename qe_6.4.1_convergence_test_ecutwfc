@@ -6,8 +6,6 @@ first_energy=$1
 final_energy=$2
 energy_step=$3
 
-ncores=`nproc --all`
-
 ry_to_ev=13.605698066
 
 if [ ! -f ecutwfc.txt ]; then
@@ -24,7 +22,7 @@ for cutoff in `seq $first_energy $energy_step $final_energy`; do
 	
 	cd ecutwfc_${cutoff}
 
-	mpirun -np $ncores /u/fs1/pts28/bin/qe-6.4.1/bin/pw.x -i pw.in > pw.out
+	mpirun -np $NCORES /u/fs1/pts28/bin/qe-6.4.1/bin/pw.x -i pw.in > pw.out
 	
 	energy=`awk '/total energy/ {print $5}' pw.out | tail -2 | head -1`
 

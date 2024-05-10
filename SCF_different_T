@@ -7,8 +7,6 @@ min_T=$1
 max_T=$2
 dT=$3
 
-ncores=`nproc --all`
-
 for i in `seq $min_T $dT $max_T`; do
 	
 	T_string=T_${i}K
@@ -41,9 +39,9 @@ for i in `seq $min_T $dT $max_T`; do
 
 	if [ ! -f "OUTCAR" ]; then
 		if [ `awk '{FS = "="} /LSORBIT/ {print $2}' INCAR` == ".TRUE." ]; then
-			mpirun -np $ncores vasp_ncl
+			mpirun -np $NCORES vasp_ncl
 		else
-			mpirun -np $ncores vasp_std 
+			mpirun -np $NCORES vasp_std 
 		fi
 
 		run_successful=`grep "General" OUTCAR` # when VASP completes a job successfully, it prints some "General timing and accounting informations for this job" at the very end of OUTCAR. Thus, if the job terminates prematurely, run_successful will be empty
@@ -53,9 +51,9 @@ for i in `seq $min_T $dT $max_T`; do
                         delete_vasp_output
 
                         if [ `awk '{FS = "="} /LSORBIT/ {print $2}' INCAR` == ".TRUE." ]; then
-                                mpirun -np $ncores vasp_ncl
+                                mpirun -np $NCORES vasp_ncl
                         else
-                                mpirun -np $ncores vasp_std
+                                mpirun -np $NCORES vasp_std
                         fi
 
                         run_successful=`grep "General" OUTCAR`

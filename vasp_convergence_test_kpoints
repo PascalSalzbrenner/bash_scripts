@@ -6,8 +6,6 @@ first_kpoint=$1
 final_kpoint=$2
 kpoint_step=$3
 
-ncores=`nproc --all`
-
 if [ ! -f energy_kpoints.txt ]; then
         echo "K-point grid; Total calculated energy [eV]; Time [s]" > energy_kpoints.txt
 fi

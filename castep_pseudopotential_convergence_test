@@ -24,8 +24,6 @@ if [ -z $r_cut_qc ]; then
 	r_cut_qc=5
 fi
 
-ncores=`nproc --all`
-
 # the radius in the pseudopotential string is given in Bohr - conversion factor to Angstrom used for output
 bohr_to_angstrom=0.529177249
 
@@ -80,7 +78,7 @@ while [ `python3 -c "print(int($r_max >= $r_min))"` -eq 1 ]; do
 
 		cd cut_off_energy_${cutoff}
 
-		mpirun -n $ncores castep.mpi $fileroot
+		mpirun -n $NCORES castep.mpi $fileroot
 
 		is_soc=`awk '/spin-orbit coupling/ {print $4}' ${fileroot}.castep`
 
@@ -150,7 +148,7 @@ while [ `python3 -c "print(int($r_max >= $r_min))"` -eq 1 ]; do
 	echo "${pressure}" >> ${fileroot}.cell
 	echo "%ENDBLOCK external_pressure" >> ${fileroot}.cell
 
-	mpirun -n $ncores castep.mpi $fileroot
+	mpirun -n $NCORES castep.mpi $fileroot
 	
 	rm ${fileroot}.check ${fileroot}.bands ${fileroot}.castep_bin
 

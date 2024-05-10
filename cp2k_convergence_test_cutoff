@@ -10,8 +10,6 @@ energy_step=$3
 name=`ls *.inp`
 fileroot=`python3 -c "print('$name'.split('.')[0])"`
 
-ncores=`nproc --all`
-
 ha_to_ev=27.211396132
 
 if [ ! -f cutoff.txt ]; then
@@ -28,7 +26,7 @@ for cutoff in `seq $first_energy $energy_step $final_energy`; do
 	
 	cd cutoff_${cutoff}
 
-	mpirun -np $ncores cp2k.popt -o ${fileroot}.out ${fileroot}.inp
+	mpirun -np $NCORES cp2k.popt -o ${fileroot}.out ${fileroot}.inp
 	
 	energy=`grep "ENERGY" ${fileroot}.out | tail -1 | awk '{print $9}'`
 

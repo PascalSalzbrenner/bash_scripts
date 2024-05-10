@@ -1,0 +1,40 @@
+#!/bin/bash
+
+lattice_param=$1 #the initial lattice parameter
+max=$2 #the final lattice parameter
+step=$3 #by how much the lattice parameter is incremented
+
+# auto-determine fileroot
+name=`ls *.eddp`
+fileroot=${name%.*}
+
+if [ ! -f dev.txt ]; then
+        echo "# Lattice Parameter [A]; Volume [A^3]; Deviation [eV]" > dev.txt 
+fi
+
+while [ `python3 -c "print(int($lattice_param <= $max))"` -eq 1 ]; do
+	
+	if [ ! -d lattice_parameter_$lattice_param ]; then	
+		
+		mkdir lattice_parameter_$lattice_param
+		awk '{print "../" $0}' ${fileroot}.eddp > lattice_parameter_${lattice_param}/${fileroot}.eddp
+	
+		sed "s/lattice_parameter/$lattice_param/g" ${fileroot}.cell > lattice_parameter_$lattice_param/${fileroot}.cell
+
+		cd lattice_parameter_$lattice_param
+		
+		cabal cell res < ${fileroot}.cell > ${fileroot}.res
+
+		dev=`res2dev $fileroot | awk '{print $2}'`
+
+		volume=`awk '/TITL/ {print $4}' ${fileroot}.res`
+
+        	cd ..
+
+		echo $lattice_param $volume $dev >> dev.txt
+
+	fi
+
+	lattice_param=`echo $lattice_param + $step | bc`
+        	
+done

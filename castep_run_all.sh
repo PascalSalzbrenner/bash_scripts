@@ -1,7 +1,5 @@
 #!/bin/bash
 
-ncores=`nproc --all`
-
 for i in */; do
 	
 	cd $i
@@ -10,7 +8,7 @@ for i in */; do
 	name=`ls *.param`
 	fileroot=`python3 -c "print('$name'.split('.')[0])"`
 
-	mpirun -n $ncores castep.mpi $fileroot
+	mpirun -n $NCORES castep.mpi $fileroot
 
 	cd ..
 

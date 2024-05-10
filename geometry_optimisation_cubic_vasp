@@ -6,8 +6,6 @@ lattice_param=$1 #the initial lattice parameter
 max=$2 #the final lattice parameter
 step=$3 #by how much the lattice parameter is incremented
 
-ncores=`nproc --all`
-
 if [ ! -f energy.txt ]; then
         echo "# Lattice Parameter [A]; Volume [A^3]; Energy [eV]" > energy.txt
 fi

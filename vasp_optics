@@ -1,7 +1,5 @@
 #!/bin/bash
 
-ncores=`nproc --all`
-
 cd Step_1
 if [ ! -f "OUTCAR" ]; then
 	run_vasp_stable
