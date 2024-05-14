@@ -1,3 +1,9 @@
 #!/bin/bash
 
-sed -i '4,8d' *.ddp
+# zsh needs a different sed -i command
+
+if [ ${SHELL##*/} = "zsh" ]; then
+  sed -i '' '4,8d' *.ddp
+else
+  sed -i '4,8d' *.ddp
+fi
