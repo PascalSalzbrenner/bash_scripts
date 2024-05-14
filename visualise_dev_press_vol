@@ -164,7 +164,7 @@ for sn in ${struc_name[@]}; do
 			fi
 
 			# copy the relevant .eddp to match the complete fileroot of the .res file
-			awk '{print "../" $0}' ../${form_press_name}.eddp > ${seed}.eddp
+			awk '{print "../" $0}' ../${form_press_name}.eddp > ${form_press_name}.eddp
 
 			dev=`res2dev $seed | awk '{print $2}'`
 			
