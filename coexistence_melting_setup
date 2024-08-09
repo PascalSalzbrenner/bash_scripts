@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# script to set up coexistence melting calculations for EDDPs and ramble
+# requires seed{,.eddp} directory and file in the current directory, alongside run_coex.sh script
+
+# help string
+if [ $# -lt 5 ]; then
+	echo "Usage: setup_coex.sh min_press max_press step structure_path suffix"
+	exit 1
+fi
+
+# input variables
+min_press=$1
+max_press=$2
+step=$3
+structure_path=$4 # structure path is the output good_castep directory of a crud enthalpy run, where structures exist at the specified pressures
+suffix=$5 # structures in the good_castep directory are named ${seed}_${pressure}p0-${suffix}.res
+
+# determine seed
+eddp_file=$(ls *.eddp)
+seed=${eddp_file%.eddp}
+
+for i in `seq $min_press $step $max_press`; do
+	
+	mkdir ${i}_GPa
+	cp -r ${seed}{,.eddp} ${i}_GPa
+	sed "s/AAA/${i}/g" run_coex.sh > ${i}_GPa/run_coex.sh
+	cp ${structure_path}/${seed}_${i}p0-${suffix}.res ${i}_GPa/${seed}.res
+
+	cd ${i}_GPa
+	supercell 1000 $i 250 $seed # using reasonable defaults for natoms and nopt to minimise input 
+	cd ..
+
+done
