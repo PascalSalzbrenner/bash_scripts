@@ -1,0 +1,35 @@
+#!/bin/bash
+
+# calculation of the energy at a given pressure for angles along the trigonal deformation path (from 60° - fcc - to 109.47122° - bcc)
+# the intention is to use the AIRSS crud.pl tool for the actual calculations
+# postprocessing will be done via a Python script
+
+# minimum and maximum lattice parameters - should straddle the equilibrium lattice parameters for all pressures under investigation
+min_lp=$1
+max_lp=$2
+# lattice parameter increment
+lp_step=$3
+# angle increment - the bcc angle will be added at the end
+angle_step=$4
+
+# detect seed - there should be a singular .res file present which contains "AAA" in place of the lattice parameter and "BBB" in place of the angle
+# one atom at [0, 0, 0]
+resfile=`ls *.res`
+seed=${resfile%.*}
+
+mkdir hopper
+
+# set up .res file for all the angles
+for i in `seq 60 $angle_step 109` 109.47122; do
+	sed "s/BBB/${i}/g" $resfile > ${seed}-${i}.res
+done
+
+for i in ${seed}-*.res; do
+	angle_seed=${i%.*}
+
+	for j in `seq $min_lp $lp_step $max_lp`; do
+		sed "s/AAA/${j}/g" $i > hopper/${angle_seed}-$j.res
+	done
+done
+
+rm ${seed}-*.res
