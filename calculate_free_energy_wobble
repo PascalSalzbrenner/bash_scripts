@@ -128,7 +128,7 @@ for i in *.res; do
 				mkdir temp_${temp}_K
 			fi
 
-			awk -v CONVFMT=%.14g -v awk_energy=$energy '/TITL/ {gsub(/\-[1-9]+[0-9]*\.\S*/, $5+awk_energy)} 1' $i > temp_${temp}_K/${i}
+			awk -v CONVFMT=%.14g -v awk_energy=$energy '/TITL/ {gsub($5, $5+awk_energy)} 1' $i > temp_${temp}_K/${i}
 
 		done < ${seed}_temperature_energy.dat
 	fi	
